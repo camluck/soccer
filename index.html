@@ -1,0 +1,832 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>3-4-3 Diamond</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: coach's tactics board. Role picker top right; pitch left, step card right; stacks on phones with sticky controls. */
+:root {
+  --bg: #E9EDE8;
+  --board: #F7F9F5;
+  --line: #A9BBAE;
+  --ink: #1C2822;
+  --muted: #5B6B61;
+  --us: #1E5BC6;
+  --us-ink: #FFFFFF;
+  --them: #C93F2A;
+  --acc: #E3A11A;
+  --acc-ink: #1C2822;
+  --zone: rgba(227, 161, 26, 0.16);
+  --zone-bad: rgba(201, 63, 42, 0.12);
+  --rule: #D3DBD4;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131C17; --board: #1B2720; --line: #4C6556; --ink: #E6EEE8; --muted: #9DB0A3;
+    --us: #6FA4FF; --us-ink: #0E1A2E; --them: #FF8670; --acc: #F4C04E; --acc-ink: #1B1405;
+    --zone: rgba(244, 192, 78, 0.14); --zone-bad: rgba(255, 134, 112, 0.13); --rule: #2C3B32;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131C17; --board: #1B2720; --line: #4C6556; --ink: #E6EEE8; --muted: #9DB0A3;
+  --us: #6FA4FF; --us-ink: #0E1A2E; --them: #FF8670; --acc: #F4C04E; --acc-ink: #1B1405;
+  --zone: rgba(244, 192, 78, 0.14); --zone-bad: rgba(255, 134, 112, 0.13); --rule: #2C3B32;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 40px; }
+
+.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px 24px; margin-bottom: 22px; }
+.titleblock { display: grid; gap: 4px; min-width: 0; flex: 1 1 380px; }
+.eyebrow { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 14px; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(44px, 8vw, 72px); line-height: .9; margin: 0; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+h1 .num { color: var(--acc); }
+.tag { color: var(--muted); max-width: 60ch; margin: 6px 0 0; }
+
+.picker { display: grid; gap: 6px; flex: 0 0 auto; }
+.picker span { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 13px; color: var(--muted); }
+.picker select {
+  appearance: none; -webkit-appearance: none;
+  font: 700 20px/1 var(--font-display); text-transform: uppercase; letter-spacing: .04em;
+  color: var(--ink); background-color: var(--board);
+  border: 1.5px solid var(--ink); border-radius: 8px;
+  padding: 12px 44px 12px 14px; min-width: 220px; max-width: 100%; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--acc) 50%), linear-gradient(135deg, var(--acc) 50%, transparent 50%);
+  background-position: calc(100% - 22px) 52%, calc(100% - 15px) 52%;
+  background-size: 7px 7px, 7px 7px; background-repeat: no-repeat;
+}
+.picker select:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
+#board { width: 100%; max-width: 470px; height: auto; display: block; background: var(--board); border-radius: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); justify-content: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { flex: none; }
+
+.panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 18px; min-width: 0; }
+.count { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+h2 { font-family: var(--font-display); font-weight: 800; font-size: 40px; line-height: 1; margin: 2px 0 0; text-transform: uppercase; text-wrap: balance; }
+.body p { margin: 0 0 10px; max-width: 58ch; }
+.goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.goals li { display: grid; gap: 2px; padding-left: 14px; border-left: 3px solid var(--acc); }
+.goals b { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; letter-spacing: .02em; }
+.cue { display: grid; gap: 2px; padding: 12px 14px; background: var(--board); border: 1px solid var(--rule); border-radius: 8px; }
+.cue small { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 13px; color: var(--muted); }
+.cue strong { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.1; }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+button { font: 700 17px/1 var(--font-display); text-transform: uppercase; letter-spacing: .06em; padding: 12px 18px; border-radius: 8px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+button.primary { background: var(--ink); color: var(--board); }
+button:disabled { opacity: .35; cursor: default; }
+button:focus-visible, .steps button:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+#replay { margin-left: auto; border-color: var(--acc); }
+
+.steps { list-style: none; margin: 0; padding: 14px 0 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 12px; counter-reset: s; }
+.steps button { all: unset; cursor: pointer; display: flex; gap: 8px; align-items: baseline; font-size: 14px; color: var(--muted); padding: 4px 0; counter-increment: s; }
+.steps button::before { content: counter(s); font: 700 13px var(--font-display); min-width: 16px; font-variant-numeric: tabular-nums; }
+.steps button[aria-current="step"] { color: var(--ink); font-weight: 700; }
+.steps button[aria-current="step"]::before { color: var(--acc); }
+
+/* SVG */
+.pitch-line { fill: none; stroke: var(--line); stroke-width: 3; }
+.pl { transition: transform .6s cubic-bezier(.4,.1,.2,1), opacity .4s; }
+.pl text { font: 700 17px var(--font-display); text-anchor: middle; letter-spacing: .02em; pointer-events: none; }
+.us circle { fill: var(--us); stroke: var(--board); stroke-width: 3; }
+.us text { fill: var(--us-ink); }
+.us.hl circle { fill: var(--acc); stroke: var(--ink); stroke-width: 3; }
+.us.hl text { fill: var(--acc-ink); font-size: 19px; }
+.us.dim { opacity: .38; }
+.them circle { fill: var(--board); stroke: var(--them); stroke-width: 4; }
+.them line { stroke: var(--them); stroke-width: 3.5; stroke-linecap: round; }
+.them.off { opacity: 0; }
+.ball circle { fill: #FFFFFF; stroke: #1C2822; stroke-width: 2.5; }
+.ball.off { opacity: 0; }
+.zone { fill: var(--zone); stroke: var(--acc); stroke-width: 2; stroke-dasharray: 2 7; stroke-linecap: round; }
+.zone.bad { fill: var(--zone-bad); stroke: var(--them); }
+.offline { stroke: var(--them); stroke-width: 2.5; stroke-dasharray: 12 8; opacity: .8; }
+.ar { fill: none; stroke-width: 4; stroke-linecap: round; }
+.ar.run { stroke: var(--us); stroke-dasharray: 10 9; }
+.ar.drib { stroke: var(--us); stroke-dasharray: 1 8; stroke-width: 5; }
+.ar.pass { stroke: var(--ink); }
+.ar.shot { stroke: var(--acc); stroke-width: 5; }
+.ar.opp { stroke: var(--them); stroke-dasharray: 10 9; }
+.ar.bad { stroke: var(--them); }
+.ar.link { stroke: var(--muted); stroke-dasharray: 4 8; stroke-width: 2.5; opacity: .8; }
+.ghost { fill: none; stroke: var(--us); stroke-width: 3; stroke-dasharray: 5 6; }
+.xmark { stroke: var(--them); stroke-width: 5; stroke-linecap: round; }
+.note { font: 700 22px var(--font-display); fill: var(--ink); paint-order: stroke; stroke: var(--board); stroke-width: 7px; stroke-linejoin: round; letter-spacing: .01em; }
+.note.big { font-size: 26px; fill: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.fresh { animation: fadein .5s .45s both; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+.mk-us { fill: var(--us); } .mk-ink { fill: var(--ink); } .mk-them { fill: var(--them); } .mk-acc { fill: var(--acc); }
+
+@media (max-width: 760px) {
+  .wrap { padding-inline: 16px; padding-block: 20px 0; }
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .picker { flex: 1 1 100%; }
+  .picker select { width: 100%; }
+  #board { max-height: 66vh; width: auto; max-width: 100%; }
+  .panel { position: static; }
+  h2 { font-size: 34px; }
+  .controls { position: sticky; bottom: 0; background: var(--bg); padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--rule); margin-inline: -16px; padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl { transition: none; }
+  .fresh { animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="titleblock">
+      <div class="eyebrow">Role walkthrough · 3-4-3 Diamond</div>
+      <h1><span id="role-name">Striker</span> <span class="num" id="role-num">9</span></h1>
+      <p class="tag" id="role-tag"></p>
+    </div>
+    <label class="picker" for="role">
+      <span>Choose a role</span>
+      <select id="role"></select>
+    </label>
+  </header>
+
+  <div class="grid">
+    <figure>
+      <svg id="board" viewBox="-24 -30 728 1060" role="img" aria-label="Soccer field showing the 3-4-3 diamond formation and the movement for this step">
+        <defs>
+          <marker id="m-us" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path class="mk-us" d="M0 0 L10 5 L0 10 z"/></marker>
+          <marker id="m-ink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path class="mk-ink" d="M0 0 L10 5 L0 10 z"/></marker>
+          <marker id="m-them" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path class="mk-them" d="M0 0 L10 5 L0 10 z"/></marker>
+          <marker id="m-acc" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.6" markerHeight="3.6" orient="auto"><path class="mk-acc" d="M0 0 L10 5 L0 10 z"/></marker>
+        </defs>
+        <g id="pitch">
+          <rect class="pitch-line" x="0" y="0" width="680" height="1000"/>
+          <line class="pitch-line" x1="0" y1="500" x2="680" y2="500"/>
+          <circle class="pitch-line" cx="340" cy="500" r="88"/>
+          <rect class="pitch-line" x="140" y="0" width="400" height="160"/>
+          <rect class="pitch-line" x="250" y="0" width="180" height="55"/>
+          <path class="pitch-line" d="M265.2 160 A90 90 0 0 0 414.8 160"/>
+          <rect class="pitch-line" x="303" y="-14" width="74" height="14"/>
+          <rect class="pitch-line" x="140" y="840" width="400" height="160"/>
+          <rect class="pitch-line" x="250" y="945" width="180" height="55"/>
+          <path class="pitch-line" d="M265.2 840 A90 90 0 0 1 414.8 840"/>
+          <rect class="pitch-line" x="303" y="1000" width="74" height="14"/>
+        </g>
+        <g id="layer-zones"></g>
+        <g id="layer-arrows"></g>
+        <g id="layer-players"></g>
+        <g id="layer-notes"></g>
+        <g id="sampler" visibility="hidden"></g>
+      </svg>
+      <div class="legend" aria-hidden="true">
+        <span><svg width="16" height="16"><circle cx="8" cy="8" r="7" fill="var(--acc)"/></svg><span id="lg-role">Striker</span></span>
+        <span><svg width="16" height="16"><circle cx="8" cy="8" r="7" fill="var(--us)"/></svg>Us</span>
+        <span><svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--them)" stroke-width="2.5"/></svg>Them</span>
+        <span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="var(--us)" stroke-width="3" stroke-dasharray="5 4"/></svg>Run</span>
+        <span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="var(--us)" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.5 6"/></svg>Dribble</span>
+        <span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="var(--ink)" stroke-width="3"/></svg>Pass</span>
+        <span><svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="var(--acc)" stroke-width="4"/></svg>Shot / clear</span>
+      </div>
+    </figure>
+
+    <section class="panel" aria-live="polite">
+      <div>
+        <div class="count" id="count">Step 1 of 9</div>
+        <h2 id="title">Your spot</h2>
+      </div>
+      <div class="body" id="body"></div>
+      <div class="cue"><small>Coach's cue</small><strong id="cue"></strong></div>
+      <div class="controls">
+        <button id="prev" type="button">Back</button>
+        <button id="next" type="button" class="primary">Next</button>
+        <button id="replay" type="button">▶ Play it</button>
+      </div>
+      <ol class="steps" id="steps"></ol>
+    </section>
+  </div>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const BASE = { GK:[340,955], LB:[170,800], CB:[340,825], RB:[510,800], CDM:[340,690], LM:[120,560], RM:[560,560], CAM:[340,470], LW:[110,300], ST:[340,250], RW:[570,300] };
+const OPP = ['o1','o2','o3','o4','o5','o6','o7'];
+const LINE4 = { o1:[110,210], o2:[250,198], o3:[420,198], o4:[570,210] };
+
+/* ---------- shared scenes ---------- */
+const CROSS_RIGHT = {
+  pos: { RW:[610,72], ST:[340,240], LW:[120,262], CAM:[340,330] },
+  opp: { o1:[290,118], o2:[470,150], o3:[360,150], o4:[562,112] }, ball:[590,90],
+  arrows: [
+    { t:'run', d:'M340 240 Q 430 190 405 72' }, { t:'run', d:'M120 262 Q 190 130 278 78' },
+    { t:'run', d:'M340 330 L340 206' }, { t:'pass', d:'M590 90 Q 520 50 436 64' }
+  ],
+  play: [
+    { who:'ST', d:'M340 240 Q 430 190 405 72', dur:1300, delay:350 }, { who:'LW', d:'M120 262 Q 190 130 278 78', dur:1300, delay:350 },
+    { who:'CAM', d:'M340 330 L340 206', dur:1300, delay:350 }, { who:'ball', d:'M590 90 Q 500 40 384 58', dur:800, delay:1450 }
+  ]
+};
+const DELAYED_RUN = {
+  pos: { ST:[335,214], CAM:[340,450] }, opp: LINE4, ball:[364,458],
+  lines: [{ d:'M0 198 L680 198' }],
+  arrows: [{ t:'run', d:'M335 214 Q 395 236 432 182 T 455 96' }, { t:'pass', d:'M364 458 L452 112' }],
+  play: [{ who:'ST', d:'M335 214 Q 395 236 432 182 T 455 96', dur:1500, delay:550 }, { who:'ball', d:'M364 458 L455 104', dur:950, delay:900 }]
+};
+const SHARE_SIDE = {
+  arrows: [{ t:'run', d:'M110 300 Q 160 270 226 282' }, { t:'run', d:'M120 560 Q 60 470 70 362' }],
+  notes: [{ x:210, y:334, text:'Wing cuts in', anchor:'start' }, { x:104, y:452, text:'Mid goes wide', anchor:'start' }, { x:340, y:400, text:'Never side by side', big:true }],
+  play: [{ who:'LW', d:'M110 300 Q 160 270 230 282', dur:1300, delay:400 }, { who:'LM', d:'M120 560 Q 60 470 70 360', dur:1300, delay:400 }]
+};
+const LANE = [{ rect:[215,120,250,250], label:'Your lane', lx:340, ly:158 }];
+const WING_LANES = [{ rect:[12,150,190,290], label:'Left wing', lx:107, ly:188 }, { rect:[478,150,190,290], label:'Right wing', lx:573, ly:188 }];
+
+/* ---------- roles ---------- */
+const ROLES = [
+  {
+    key:'striker', name:'Striker', num:'9', hl:['ST'], option:'Striker (ST)',
+    tag:'The point of the arrow. Stay in the middle, stay on their shoulder, and always be a problem.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['You are the point of the arrow. Our two wings hold the sidelines, so your home is the middle lane, right up top.',
+              'If you can touch the sideline, you are standing in a wing’s space.'],
+        cue:'Middle lane, top of the field.', zones: LANE },
+      { nav:'Stay high', title:'Stay high, pin them back',
+        body:['Stand level with their last defender, right on their shoulder. Their back line can’t step up, because they have to keep an eye on you.',
+              'That opens a big pocket of space behind you for our CAM and wings to attack. You helped the team even if you never touched the ball.'],
+        cue:'Stay on their shoulder.', focus:['ST','CAM','LW','RW'],
+        pos:{ ST:[340,200] }, opp:{ o1:[130,215], o2:[275,198], o3:[405,198], o4:[550,215] },
+        lines:[{ d:'M0 198 L680 198', label:'Stay level with this line', lx:10, ly:178, anchor:'start' }],
+        zones:[{ rect:[140,240,400,170], label:'Space you open up', lx:340, ly:300 }],
+        arrows:[{ t:'run', d:'M340 446 L340 342' }] },
+      { nav:'Don’t drop deep', title:'Don’t drop deep',
+        body:['When you come back for the ball, a defender follows you. Now there’s a crowd in the middle and our CAM has nowhere to go.',
+              'Stay up top and let the ball come to you.'],
+        cue:'Let the ball come to you.', focus:['ST','CAM'],
+        pos:{ ST:[340,415] }, opp:{ o1:[130,215], o2:[318,362], o3:[405,198], o4:[550,215] },
+        ghosts:[[340,200]], xs:[[340,304]],
+        zones:[{ rect:[230,330,220,190], bad:true, label:'No room for our CAM', lx:340, ly:552 }],
+        arrows:[{ t:'bad', d:'M340 226 L340 382' }, { t:'opp', d:'M282 220 L312 330' }],
+        notes:[{ x:340, y:160, text:'You were here' }] },
+      { ...DELAYED_RUN, nav:'Delayed run', title:'The delayed run',
+        body:['Wait for it. When the passer’s head goes down to strike the ball, that’s your signal.',
+              'Bend your run along their back line so you stay onside, then burst in behind. Too early and you’re offside. Too late and the defender gets there first.'],
+        cue:'Head goes down = GO.', focus:['ST','CAM'],
+        notes:[{ x:384, y:500, text:'Head down = GO', anchor:'start' }, { x:474, y:252, text:'Bend along the line', anchor:'start' }] },
+      { nav:'The flash', title:'The flash',
+        body:['Drift sideways across their back line, then break in behind.',
+              'Defenders have to turn their heads to follow you. The moment they look back at the ball, you’re gone.'],
+        cue:'Slide, then go.', focus:['ST','CAM'],
+        pos:{ ST:[195,222], CAM:[340,450] }, opp:LINE4, ball:[364,458],
+        lines:[{ d:'M0 198 L680 198' }],
+        arrows:[{ t:'run', d:'M195 222 Q 300 244 390 234 Q 448 226 460 96' }, { t:'pass', d:'M364 458 L456 112' }],
+        notes:[{ x:290, y:282, text:'Slide across' }, { x:384, y:500, text:'Head down = GO', anchor:'start' }],
+        play:[{ who:'ST', d:'M195 222 Q 300 244 390 234 Q 448 226 460 96', dur:1800, delay:500 }, { who:'ball', d:'M364 458 L460 104', dur:900, delay:1450 }] },
+      { ...CROSS_RIGHT, nav:'Crosses', title:'Attacking crosses',
+        body:['When a wing gets to the end line, you crash the near post. The far-side wing hits the back post, and the CAM waits at the top of the box.',
+              'Three targets are much harder to stop than one.'],
+        cue:'Near post is yours.', focus:['ST','LW','RW','CAM'],
+        notes:[{ x:434, y:56, text:'Near post', anchor:'start' }, { x:250, y:56, text:'Back post', anchor:'end' }, { x:372, y:212, text:'Top of box', anchor:'start' }] },
+      { nav:'Control to shot', title:'Control to shot',
+        body:['Up top you get fewer touches and less time than anyone. Touch one sets the ball up. Touch two is the shot.',
+              'A strong weak foot means you never need an extra touch to switch feet, and that extra touch is when defenders steal it.'],
+        cue:'Touch, shot.', focus:['ST','CAM'],
+        pos:{ ST:[330,192], CAM:[340,400] }, opp:{ o1:[110,210], o2:[220,222], o3:[455,232], o4:[570,210] }, ball:[358,392],
+        arrows:[{ t:'pass', d:'M358 392 L338 216' }, { t:'opp', d:'M440 226 L392 210' }, { t:'shot', d:'M300 170 L320 14' }],
+        notes:[{ x:285, y:146, text:'Touch 1: set it', anchor:'end' }, { x:346, y:84, text:'Touch 2: shoot', anchor:'start' }],
+        play:[{ who:'ball', d:'M358 392 L336 212 L302 172 L322 4', dur:2000, delay:450 }, { who:'ST', d:'M330 192 L306 186', dur:500, delay:1150 }, { who:'o3', d:'M455 232 L392 210', dur:1300, delay:700 }] },
+      { nav:'Defend first', title:'Defend from the front',
+        body:['When they have the ball, you’re our first defender. Curve your run so you block the pass into the middle.',
+              'That pushes their defender toward the sideline, and now our wings and mids know exactly where the ball is going.'],
+        cue:'Curve it, push it wide.', focus:['ST','RW'],
+        pos:{ ST:[320,282], RW:[560,312] },
+        opp:{ o1:[110,210], o2:[250,198], o3:[420,190], o4:[580,214], o5:[330,352] }, ball:[438,202],
+        arrows:[{ t:'run', d:'M320 282 Q 335 240 385 226' }, { t:'opp', d:'M436 204 Q 492 208 520 246' }, { t:'run', d:'M566 300 L594 286' }],
+        crosses:[{ line:'M420 190 L330 352', x:375, y:271 }],
+        notes:[{ x:292, y:246, text:'Curve to cut off the middle', anchor:'end' }, { x:398, y:300, text:'Pass blocked', anchor:'start' }, { x:668, y:166, text:'Push them wide', anchor:'end' }],
+        play:[{ who:'ST', d:'M320 282 Q 335 240 385 226', dur:900, delay:400 }, { who:'o3', d:'M420 190 Q 480 194 520 246', dur:1000, delay:1100 },
+              { who:'ball', d:'M438 202 Q 498 206 534 258', dur:1000, delay:1100 }, { who:'RW', d:'M560 312 L600 282', dur:900, delay:1300 }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Weak foot','Control and shoot with either foot so you never need an extra touch.'],
+               ['Stay high','Level with their last defender, the whole half. Don’t come back for the ball.'],
+               ['Delayed runs','Wait for the passer’s head to go down, then go. Curve it or flash across.']],
+        cue:'Stay in the middle, stay on their shoulder, and always be a problem.', zones: LANE }
+    ]
+  },
+  {
+    key:'wings', name:'Wings', num:'7 · 11', hl:['LW','RW'], option:'Wings (LW / RW)',
+    tag:'Fast, wide, and fearless. Keep the field big, beat your defender, and get on the end of crosses.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['You own the sideline. Our wings keep the field big so the striker and CAM have room in the middle.',
+              'Stay high and wide. If you drift into the middle, you crowd your own teammates.'],
+        cue:'Wide and high.', zones: WING_LANES },
+      { nav:'Stay wide', title:'Stay wide, stretch them',
+        body:['When you hug the sideline, their outside defenders have to come with you.',
+              'That stretches their back line and opens space in the middle for our striker and CAM.'],
+        cue:'Make the field big.', focus:['LW','RW','ST','CAM'],
+        pos:{ LW:[62,300], RW:[618,300], ST:[340,215] }, opp:{ o1:[120,212], o2:[262,198], o3:[418,198], o4:[560,212] },
+        zones:[{ rect:[180,240,320,170], label:'Room in the middle', lx:340, ly:330 }],
+        arrows:[{ t:'opp', d:'M200 206 L150 210' }, { t:'opp', d:'M480 206 L530 210' }],
+        notes:[{ x:20, y:258, text:'Feet near the line', anchor:'start' }, { x:660, y:258, text:'Feet near the line', anchor:'end' }] },
+      { nav:'Win the 1v1', title:'Win the 1v1',
+        body:['When you get the ball with space, go at the defender. Attack her head-on so she has to commit.',
+              'Use one move, like a fake kick, then explode past. Don’t pass back when you can take her on.'],
+        cue:'Go at her.', focus:['LW'], hl:['LW'],
+        pos:{ LW:[82,400] }, opp:{ o1:[135,300], o2:[262,198], o3:[418,198], o4:[560,212] }, ball:[100,388],
+        arrows:[{ t:'drib', d:'M82 400 L118 352 Q 70 318 74 250 L90 184' }],
+        notes:[{ x:170, y:420, text:'Attack her head-on', anchor:'start' }, { x:120, y:160, text:'Fake, then explode', anchor:'start' }],
+        play:[{ who:'LW', d:'M82 400 L118 352 Q 70 318 74 250 L92 170', dur:1700, delay:500 }, { who:'ball', d:'M100 388 L134 344 Q 88 312 90 240 L108 160', dur:1700, delay:500 }] },
+      { nav:'Cut in', title:'Cut in: shoot or cross',
+        body:['Once you’re past her, cut inside toward goal.',
+              'Open lane? Shoot for the far post. Blocked? Cross it to the back post, where our striker and other wing are crashing.'],
+        cue:'Past her, then cut in.', focus:['LW','ST','RW'], hl:['LW'],
+        pos:{ LW:[150,140], ST:[340,240], RW:[570,300] }, opp:{ o1:[150,215], o2:[268,152], o3:[380,140], o4:[505,150] }, ball:[168,150],
+        arrows:[{ t:'drib', d:'M150 140 L218 130' }, { t:'shot', d:'M250 132 L368 12' }, { t:'pass', d:'M250 132 Q 350 50 428 74' },
+                { t:'run', d:'M340 240 Q 300 160 300 84' }, { t:'run', d:'M570 300 Q 560 170 442 86' }],
+        notes:[{ x:290, y:26, text:'Open lane? Shoot far post', anchor:'end' }, { x:470, y:66, text:'Blocked? Cross it', anchor:'start' }],
+        play:[{ who:'LW', d:'M150 140 L228 128', dur:700, delay:400 }, { who:'ball', d:'M168 150 L246 134 L370 4', dur:1500, delay:400 },
+              { who:'ST', d:'M340 240 Q 300 160 300 82', dur:1300, delay:400 }, { who:'RW', d:'M570 300 Q 560 170 440 84', dur:1300, delay:400 }] },
+      { ...CROSS_RIGHT, nav:'Back post', title:'Back post runs',
+        body:['When the ball is on the other side, crash the back post.',
+              'Crosses that sail past everyone land right at your feet. Hit it first time.'],
+        cue:'Ball on the far side? Back post.', focus:['LW','RW','ST','CAM'],
+        notes:[{ x:250, y:56, text:'Back post: you', anchor:'end' }, { x:434, y:56, text:'Near post: ST', anchor:'start' }] },
+      { ...SHARE_SIDE, nav:'Share the side', title:'Share the side',
+        body:['You and your wide mid share one side of the field. Never stand side by side in the same lane.',
+              'If you cut inside, she goes wide. If you stay wide, she tucks in.'],
+        cue:'One in, one out.', focus:['LW','LM'], hl:['LW'] },
+      { nav:'Defend first', title:'Block the line',
+        body:['When they have the ball, block the pass up the sideline.',
+              'That forces their defender to play inside, right into our striker and CAM.'],
+        cue:'Block the line.', focus:['LW','ST','CAM'], hl:['LW'],
+        pos:{ LW:[110,330], ST:[320,300], CAM:[340,430] }, opp:{ o1:[140,225], o2:[262,198], o3:[418,198], o4:[560,212], o5:[250,330] }, ball:[158,240],
+        arrows:[{ t:'run', d:'M110 330 Q 100 290 120 276' }, { t:'opp', d:'M164 246 L232 314' }],
+        crosses:[{ line:'M140 225 L60 430', x:87, y:362 }],
+        notes:[{ x:106, y:398, text:'Block the line', anchor:'start' }, { x:262, y:384, text:'Force it inside', anchor:'start' }],
+        play:[{ who:'LW', d:'M110 330 Q 100 290 120 272', dur:800, delay:400 }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Stay wide','Feet near the sideline so the field stays big.'],
+               ['Win 1v1s','Attack the defender head-on, then explode past with one move.'],
+               ['Cut in: shoot or cross','Open lane, shoot far post. Blocked, cross it to the back post.'],
+               ['Back post runs','Ball on the far side? Crash the back post.']],
+        cue:'Wide, fast, and fearless.', zones: WING_LANES }
+    ]
+  },
+  {
+    key:'cam', name:'Attacking Mid', num:'10', hl:['CAM'], option:'Attacking mid (CAM)',
+    tag:'The playmaker. Find space between their lines, feed the striker, and arrive late to score.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['You are the hub of the diamond. Three attackers in front of you, two wide mids beside you, and our CDM behind.',
+              'Every attack runs through you, so you always want to be open.'],
+        cue:'Be the hub.',
+        arrows:[{ t:'link', d:'M340 448 L340 276' }, { t:'link', d:'M320 458 L132 314' }, { t:'link', d:'M360 458 L548 314' },
+                { t:'link', d:'M318 478 L144 552' }, { t:'link', d:'M362 478 L536 552' }, { t:'link', d:'M340 492 L340 666' }] },
+      { nav:'Find the pocket', title:'Find the pocket',
+        body:['Find the open space between their midfielders and their defenders. That pocket is where you hurt them.',
+              'Keep moving until the pass is on. If a defender is standing right next to you, you’re not in the pocket yet.'],
+        cue:'Find the gap.', focus:['CAM','CDM','ST'],
+        pos:{ ST:[340,214] }, opp:{ ...LINE4, o5:[200,390], o6:[300,420], o7:[480,390] }, ball:[362,700],
+        zones:[{ rect:[180,232,320,118], label:'The pocket', lx:340, ly:270 }],
+        arrows:[{ t:'run', d:'M340 470 Q 400 400 346 314' }, { t:'pass', d:'M362 700 L354 340' }],
+        notes:[{ x:376, y:600, text:'Show for the pass', anchor:'start' }],
+        play:[{ who:'CAM', d:'M340 470 Q 400 400 345 310', dur:1200, delay:400 }, { who:'ball', d:'M362 700 L354 334', dur:900, delay:1300 }] },
+      { nav:'Turn, look up', title:'Turn and look up',
+        body:['When the ball comes to you, open your body so you can turn and face their goal.',
+              'Peek up every few touches. With your head up you can see the striker’s run, both wings, and the goal.'],
+        cue:'Turn, then look up.', focus:['CAM','ST','LW','RW'],
+        pos:{ CAM:[345,310], ST:[340,214] }, opp:{ ...LINE4, o5:[200,390], o6:[300,400], o7:[480,390] }, ball:[364,296],
+        arrows:[{ t:'link', d:'M345 288 L341 240' }, { t:'link', d:'M323 304 L134 300' }, { t:'link', d:'M367 304 L546 300' }],
+        notes:[{ x:345, y:372, text:'Open your hips, face their goal' }, { x:345, y:150, text:'Head up: see it all' }] },
+      { ...DELAYED_RUN, nav:'Feed the striker', title:'Feed the striker',
+        body:['Watch for the striker’s run. Slide the ball into the space in front of her, not to her feet.',
+              'A soft, well-timed pass lets her run onto it without breaking stride.'],
+        cue:'Pass to where she’s going.', focus:['CAM','ST'],
+        notes:[{ x:384, y:500, text:'Into space, not to her feet', anchor:'start' }, { x:480, y:126, text:'She meets it here', anchor:'start' }] },
+      { nav:'Shoot or slip it', title:'Shoot or slip it',
+        body:['Two options every time you’re near the box. If you can see the goal and have space, shoot.',
+              'If a teammate is running in behind, slip the through ball. Defenders can’t guess which one is coming.'],
+        cue:'Goal or runner?', focus:['CAM','ST'],
+        pos:{ CAM:[340,300], ST:[300,214] }, opp:{ o1:[110,212], o2:[220,200], o3:[460,200], o4:[590,212] }, ball:[340,278],
+        arrows:[{ t:'shot', d:'M344 262 L350 14' }, { t:'pass', d:'M352 268 L418 120' }, { t:'run', d:'M300 214 Q 360 210 416 102' }],
+        notes:[{ x:362, y:40, text:'See the goal? Shoot', anchor:'start' }, { x:446, y:150, text:'Runner? Slip it', anchor:'start' }],
+        play:[{ who:'ST', d:'M300 214 Q 360 210 418 100', dur:1300, delay:400 }, { who:'ball', d:'M340 278 L420 112', dur:900, delay:900 }] },
+      { nav:'Arrive late', title:'Arrive late',
+        body:['When the wings attack, crash the top of the box a step later than everyone else.',
+              'Defenders follow the early runners and lose track of you. The cutback lands right in your path.'],
+        cue:'Late is great.', focus:['CAM','RW','ST','LW'],
+        pos:{ RW:[610,72], ST:[340,240], LW:[120,262], CAM:[340,360] },
+        opp:{ o1:[250,110], o2:[480,110], o3:[300,160], o4:[575,150] }, ball:[590,90],
+        arrows:[{ t:'run', d:'M340 240 Q 430 190 405 72' }, { t:'run', d:'M120 262 Q 190 130 278 78' }, { t:'run', d:'M340 360 L344 236' },
+                { t:'pass', d:'M590 90 Q 480 180 372 208' }, { t:'shot', d:'M340 190 L330 14' }],
+        notes:[{ x:372, y:262, text:'Arrive late', anchor:'start' }, { x:490, y:206, text:'Cutback', anchor:'start' }],
+        play:[{ who:'ST', d:'M340 240 Q 430 190 405 72', dur:1300, delay:300 }, { who:'LW', d:'M120 262 Q 190 130 278 78', dur:1300, delay:300 },
+              { who:'CAM', d:'M340 360 L345 212', dur:1500, delay:500 }, { who:'ball', d:'M590 90 Q 480 180 368 210 L330 6', dur:1500, delay:1500 }] },
+      { nav:'Defend first', title:'Squeeze their mid',
+        body:['When they win the ball, you’re the first midfielder to react. Step up to their center mid.',
+              'Get close so she can’t turn and face our goal. Our CDM has your back.'],
+        cue:'Squeeze her.', focus:['CAM','CDM'],
+        opp:{ ...LINE4, o6:[340,360] }, ball:[358,372],
+        arrows:[{ t:'run', d:'M340 470 L340 410' }],
+        notes:[{ x:372, y:440, text:'Don’t let her turn', anchor:'start' }],
+        play:[{ who:'CAM', d:'M340 470 L340 404', dur:700, delay:400 }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Find the pocket','Get between their mids and defenders, then turn to face their goal.'],
+               ['Head up','Peek up every few touches so you see runners and the goal.'],
+               ['Feed the striker','Slide through balls into space in front of her, not to her feet.'],
+               ['Shoot or slip it','See the goal, shoot. See a runner, slip it.'],
+               ['Arrive late','Crash the top of the box when the wings attack.']],
+        cue:'Find space, feed the striker, and arrive late.' }
+    ]
+  },
+  {
+    key:'wide-mids', name:'Wide Mids', num:'8', hl:['LM','RM'], option:'Wide mids (LM / RM)',
+    tag:'The engine. Attack your side, defend your side, and never share a lane with your wing.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['You have the longest commute on the team. With only three backs, you defend your side and attack it too.',
+              'When we have the ball, push up. When we lose it, sprint home.'],
+        cue:'Up and back, all game.',
+        zones:[{ rect:[18,430,200,260], label:'Left mid', lx:118, ly:468 }, { rect:[462,430,200,260], label:'Right mid', lx:562, ly:468 }] },
+      { nav:'Track back', title:'Track back',
+        body:['When we lose the ball, our side of the field is open. Only three backs means nobody else is there to cover it.',
+              'Sprint back and get between the attacker and our goal.'],
+        cue:'Lose it? Sprint home.', focus:['LM','LB'], hl:['LM'],
+        pos:{ LM:[150,380], LW:[110,250] }, opp:{ o5:[210,470] }, ball:[222,486],
+        arrows:[{ t:'opp', d:'M210 470 Q 200 600 172 690' }, { t:'run', d:'M150 380 Q 70 560 118 722' }],
+        notes:[{ x:30, y:330, text:'Sprint home!', anchor:'start' }, { x:240, y:640, text:'Get goal-side', anchor:'start' }],
+        play:[{ who:'o5', d:'M210 470 Q 200 600 170 700', dur:1800, delay:400 }, { who:'ball', d:'M222 486 Q 214 616 186 714', dur:1800, delay:400 },
+              { who:'LM', d:'M150 380 Q 70 560 120 740', dur:1600, delay:450 }] },
+      { ...SHARE_SIDE, nav:'Share the side', title:'Share the side',
+        body:['You and the wing share one side of the field. Never stand side by side.',
+              'When she cuts inside, that’s your cue to go wide. When she stays wide, you tuck in.'],
+        cue:'One in, one out.', focus:['LW','LM'], hl:['LM'] },
+      { nav:'Dribble, release', title:'Dribble, then release',
+        body:['Dribble into space to pull a defender toward you. The moment she commits, a teammate is free.',
+              'Release the through ball before the runner goes offside. Holding it one touch too long kills the play.'],
+        cue:'She steps up, you let it go.', focus:['LM','ST'], hl:['LM'],
+        pos:{ LM:[150,500], ST:[380,214] }, opp:{ ...LINE4, o5:[262,452] }, ball:[168,488],
+        lines:[{ d:'M0 198 L680 198' }],
+        arrows:[{ t:'drib', d:'M150 500 Q 190 470 200 436' }, { t:'pass', d:'M214 420 L356 118' }, { t:'run', d:'M380 214 Q 380 150 360 98' }],
+        notes:[{ x:110, y:562, text:'Draw her in', anchor:'start' }, { x:290, y:300, text:'Release it now', anchor:'start' }],
+        play:[{ who:'LM', d:'M150 500 Q 190 470 200 430', dur:800, delay:300 }, { who:'ball', d:'M168 488 Q 206 458 214 420 L358 106', dur:1700, delay:300 },
+              { who:'ST', d:'M380 214 Q 380 150 360 96', dur:1300, delay:900 }] },
+      { nav:'Cross it in', title:'Cross it in',
+        body:['Get to the end line, then cross it in.',
+              'Aim near post for our striker and back post for the far wing. A ball between the keeper and the defenders is the hardest to stop.'],
+        cue:'End line, then whip it in.', focus:['RM','ST','LW'], hl:['RM'],
+        pos:{ RM:[612,72], RW:[520,250], ST:[340,240], LW:[120,262] },
+        opp:{ o1:[290,118], o2:[470,150], o3:[360,150], o4:[562,112] }, ball:[590,90],
+        arrows:[{ t:'run', d:'M340 240 Q 430 190 405 72' }, { t:'run', d:'M120 262 Q 190 130 278 78' }, { t:'pass', d:'M590 90 Q 520 50 436 64' }],
+        notes:[{ x:434, y:56, text:'Near post', anchor:'start' }, { x:250, y:56, text:'Back post', anchor:'end' }, { x:668, y:164, text:'End line, then cross', anchor:'end' }],
+        play:[{ who:'ST', d:'M340 240 Q 430 190 405 72', dur:1300, delay:350 }, { who:'LW', d:'M120 262 Q 190 130 278 78', dur:1300, delay:350 },
+              { who:'ball', d:'M590 90 Q 500 40 384 58', dur:800, delay:1450 }] },
+      { nav:'Win it, pass it', title:'Win it, find a pass',
+        body:['When you win the ball, keep your body between the defender and the ball.',
+              'That buys you time to look up and find the open teammate. Use either foot, and every direction is an option.'],
+        cue:'Win it, shield it, pick a pass.', focus:['RM','CAM','RW','CDM'], hl:['RM'],
+        pos:{ RM:[540,540] }, opp:{ o5:[560,600] }, ball:[548,512],
+        arrows:[{ t:'pass', d:'M550 500 L568 330' }, { t:'pass', d:'M530 510 L366 476' }, { t:'pass', d:'M528 556 L366 680' }],
+        notes:[{ x:470, y:640, text:'Shield, then look up', anchor:'end' }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Track back','Lose the ball? Sprint home. Our side is open with three backs.'],
+               ['Spacing with the wing','One in, one out. Never side by side.'],
+               ['Dribble, then release','Draw a defender, then slide the through ball before the runner is offside.'],
+               ['Cross it in','End line, then near post for the striker, back post for the far wing.'],
+               ['Win it, find a pass','Shield it, look up, use either foot.']],
+        cue:'Up and back, all game.' }
+    ]
+  },
+  {
+    key:'cdm', name:'Defensive Mid', num:'6', hl:['CDM'], option:'Defensive mid (CDM)',
+    tag:'The seatbelt. Guard the middle, see the whole field, and get the ball moving fast.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['You are the team’s seatbelt. You sit in the middle, right in front of our three backs.',
+              'Block passes through the middle, and keep the ball moving when we have it.'],
+        cue:'Guard the door.',
+        zones:[{ rect:[220,600,240,160], label:'Your zone', lx:340, ly:638 }] },
+      { nav:'Slide, don’t drift', title:'Slide, don’t drift',
+        body:['When the ball goes wide, slide toward that side, but stay inside the middle of the field.',
+              'If you chase it to the sideline, the middle opens up like a drive-thru lane.'],
+        cue:'If you can touch the sideline paint, you’re too far.', focus:['CDM','LB','CB','RB'],
+        pos:{ LM:[100,450] }, opp:{ o5:[140,560] }, ball:[158,572],
+        ghosts:[[150,650]], xs:[[150,650]],
+        arrows:[{ t:'run', d:'M340 690 L298 676' }, { t:'bad', d:'M262 668 L180 654' }],
+        notes:[{ x:300, y:742, text:'Slide toward the ball' }, { x:150, y:612, text:'Too far' }],
+        play:[{ who:'CDM', d:'M340 690 L290 672', dur:800, delay:400 }] },
+      { nav:'Scan first', title:'Scan before you receive',
+        body:['Before the ball gets to you, check over both shoulders.',
+              'If you already know where the pressure is and where your pass is going, you’ll never get caught.'],
+        cue:'Look, look, then receive.', focus:['CDM','CB'],
+        opp:{ o5:[300,620] }, ball:[362,812],
+        arrows:[{ t:'link', d:'M318 676 L252 642' }, { t:'link', d:'M362 676 L428 642' }, { t:'pass', d:'M360 804 L346 718' }],
+        notes:[{ x:244, y:632, text:'Check left', anchor:'end' }, { x:436, y:632, text:'Check right', anchor:'start' }],
+        play:[{ who:'ball', d:'M362 812 L346 712', dur:900, delay:1000 }] },
+      { nav:'Win it, move it', title:'Win it, move it',
+        body:['When you win the ball, look for the open side first. If one side is crowded, switch it to the other.',
+              'No switch? Find the CAM fast to start our attack. Two touches max keeps it simple.'],
+        cue:'Win it, move it.', focus:['CDM','RM','CAM'],
+        pos:{ CDM:[320,640], LM:[100,450] }, opp:{ o5:[150,560], o6:[230,610], o7:[260,520] }, ball:[340,630],
+        zones:[{ rect:[110,480,200,170], bad:true, label:'Crowded', lx:210, ly:684 }],
+        arrows:[{ t:'pass', d:'M354 630 Q 460 560 536 560' }, { t:'pass', d:'M330 620 L338 496' }],
+        notes:[{ x:460, y:520, text:'Switch to the open side' }],
+        play:[{ who:'ball', d:'M340 630 Q 460 560 540 556', dur:1100, delay:700 }] },
+      { nav:'Step in', title:'Step in on a big touch',
+        body:['Be patient. When their player takes a big touch, that’s your moment to step in.',
+              'Block with the inside of your foot, stay low and strong, and win it.'],
+        cue:'Big touch? Step in.', focus:['CDM'],
+        opp:{ o5:[330,540] }, ball:[336,560],
+        arrows:[{ t:'opp', d:'M330 540 L336 590' }, { t:'run', d:'M340 690 L347 658' }],
+        notes:[{ x:372, y:600, text:'Big touch = step in', anchor:'start' }],
+        play:[{ who:'o5', d:'M330 540 L336 600', dur:900, delay:400 }, { who:'ball', d:'M336 560 L346 625', dur:900, delay:400 },
+              { who:'CDM', d:'M340 690 L348 650', dur:500, delay:1000 }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Stay central','Slide toward the ball, but never to the sideline.'],
+               ['Scan before receiving','Check both shoulders so you know your next pass.'],
+               ['Win it, move it','Switch to the open side or find the CAM fast.'],
+               ['Strong in tackles','Step in on a big touch. Low and strong.'],
+               ['Keep it simple','Two touches max to the closest open teammate.']],
+        cue:'Guard the door.', zones:[{ rect:[220,600,240,160], label:'Your zone', lx:340, ly:638 }] }
+    ]
+  },
+  {
+    key:'backs', name:'Back Three', num:'2 · 4 · 5', hl:['LB','CB','RB'], option:'Back three (LB / CB / RB)',
+    tag:'The wall. Three of you cover the whole field, so stay connected, stay goal-side, and stay loud.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['Three backs cover the whole width of the field, so you work as one unit.',
+              'Your wide mids help on the sides, and the CDM protects the middle in front of you.'],
+        cue:'Three as one.',
+        zones:[{ rect:[30,730,620,130], label:'Your line', lx:340, ly:768 }] },
+      { nav:'Slide together', title:'Slide together',
+        body:['When the ball goes to one side, all three of you slide that way together.',
+              'The back closest to the ball steps up. The other two tuck in behind to cover.'],
+        cue:'Slide together.', focus:['LB','CB','RB'],
+        opp:{ o5:[560,640] }, ball:[548,656],
+        arrows:[{ t:'run', d:'M170 800 L236 800' }, { t:'run', d:'M340 825 L396 812' }, { t:'run', d:'M510 800 L538 764' }],
+        notes:[{ x:340, y:905, text:'Slide as a unit', big:true }, { x:668, y:722, text:'Ball side steps up', anchor:'end' }],
+        play:[{ who:'LB', d:'M170 800 L240 800', dur:900, delay:400 }, { who:'CB', d:'M340 825 L400 812', dur:900, delay:400 }, { who:'RB', d:'M510 800 L540 760', dur:900, delay:400 }] },
+      { nav:'Stay goal-side', title:'Stay goal-side',
+        body:['Always stay between your attacker and our goal.',
+              'Be patient and stay on your toes. Diving in lets her slip right past you.'],
+        cue:'Goal-side and patient.', focus:['LB'], hl:['LB'],
+        pos:{ LB:[182,722] }, opp:{ o5:[150,650] }, ball:[166,664],
+        arrows:[{ t:'link', d:'M166 672 L336 994' }],
+        notes:[{ x:216, y:716, text:'Stay on this line', anchor:'start' }, { x:150, y:612, text:'Don’t dive in' }] },
+      { nav:'Be loud', title:'Be loud',
+        body:['Talk the whole game. You can see the field better than anyone in front of you.',
+              '“Man on!” means pressure is coming. “Time!” means you have space. “Mine!” means you’re taking the ball.'],
+        cue:'Be loud!', focus:['LB','CB'],
+        opp:{ o5:[392,770] }, ball:[356,810],
+        arrows:[{ t:'link', d:'M192 806 L316 820' }, { t:'opp', d:'M392 770 L370 792' }],
+        notes:[{ x:170, y:766, text:'“Man on!”' }, { x:340, y:905, text:'Man on · Time · Mine', big:true }] },
+      { nav:'Up the line', title:'Up the line, never across',
+        body:['When you win it, play it up your side of the field to the wide mid or wing.',
+              'Never pass across the front of our own goal. If it gets picked off, they’re one pass from scoring.'],
+        cue:'Up the line, never across.', focus:['LB','LM'], hl:['LB'],
+        pos:{ LB:[170,780] }, ball:[188,766],
+        arrows:[{ t:'pass', d:'M182 756 L124 586' }, { t:'bad', d:'M200 790 Q 340 760 484 790' }],
+        xs:[[340,775]],
+        notes:[{ x:340, y:742, text:'Never across our goal' }, { x:80, y:680, text:'Up the line' }] },
+      { nav:'Space or safe', title:'Space or safe',
+        body:['Defenders don’t dribble in our half. Decide before the ball arrives.',
+              'Got space? Pass to a teammate. Under pressure? Clear it high and wide up the sideline.'],
+        cue:'Space or safe!', focus:['LB','RB','CDM'],
+        opp:{ o5:[470,750] }, ball:[528,786],
+        arrows:[{ t:'pass', d:'M188 790 L318 704' }, { t:'shot', d:'M534 776 Q 650 600 612 410' }],
+        notes:[{ x:170, y:870, text:'Space? Pass it' }, { x:540, y:870, text:'Pressure? Clear it' }],
+        play:[{ who:'ball', d:'M528 786 Q 650 600 612 400', dur:1100, delay:600 }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Stay goal-side','Between your attacker and our goal. Patient, don’t dive in.'],
+               ['Be loud','Man on, Time, Mine. Every play.'],
+               ['Up the line','Win it, then play it up your side. Never across our goal.'],
+               ['Pass or clear','Space? Pass it. Pressure? Clear it up the sideline.'],
+               ['Scan before receiving','Check both shoulders so the decision is made early.']],
+        cue:'Three as one.', zones:[{ rect:[30,730,620,130], label:'Your line', lx:340, ly:768 }] }
+    ]
+  },
+  {
+    key:'gk', name:'Goalkeeper', num:'1', hl:['GK'], option:'Goalkeeper (GK)',
+    tag:'Last line of defense, first line of attack. Stop it, hold it, then start us going.',
+    steps: [
+      { nav:'Your spot', title:'Your spot',
+        body:['You’re our last line of defense and our first attacker.',
+              'Stop the shot, then start the next attack with a smart throw or roll.'],
+        cue:'Last line, first pass.',
+        zones:[{ rect:[236,890,208,108], label:'Your house', lx:340, ly:920 }] },
+      { nav:'Cut the angle', title:'Cut the angle',
+        body:['Stay on the line between the ball and the middle of the goal.',
+              'Take a few steps out toward the shooter. The closer you are, the less goal she can see.'],
+        cue:'Ball, me, middle of the goal.', focus:['GK'],
+        pos:{ LB:[120,740], CB:[300,760] }, opp:{ o5:[200,800] }, ball:[216,812],
+        arrows:[{ t:'link', d:'M216 812 L303 1000' }, { t:'link', d:'M216 812 L377 1000' }, { t:'run', d:'M340 955 L306 940' }],
+        notes:[{ x:380, y:900, text:'Step out a few steps', anchor:'start' }],
+        play:[{ who:'GK', d:'M340 955 L298 935', dur:800, delay:400 }] },
+      { nav:'Low saves', title:'Low saves',
+        body:['Stay low in your ready stance: knees bent, weight on your toes, hands at your waist.',
+              'For low shots, get your hands down early and dive sideways. Pull the ball into your body so there’s no rebound.'],
+        cue:'Low and ready.', focus:['GK'],
+        pos:{ GK:[298,935], LB:[120,740], CB:[300,760] }, opp:{ o5:[200,800] }, ball:[216,812],
+        arrows:[{ t:'shot', d:'M216 812 L298 990' }, { t:'run', d:'M298 935 L284 962' }],
+        notes:[{ x:360, y:930, text:'Hands down early', anchor:'start' }, { x:360, y:968, text:'Dive sideways, not back', anchor:'start' }],
+        play:[{ who:'ball', d:'M216 812 L282 958', dur:600, delay:700 }, { who:'GK', d:'M298 935 L290 962', dur:450, delay:750 }] },
+      { nav:'Distribute wide', title:'Distribute wide',
+        body:['After a save, look wide first. Roll or throw it to a back or wide mid on the side.',
+              'Never kick it into the middle near our goal. If they win it there, they’re one shot away.'],
+        cue:'Save it, then go wide.', focus:['GK','LB','RB'],
+        opp:{ o5:[290,730] }, ball:[358,940],
+        arrows:[{ t:'pass', d:'M352 940 L192 814' }, { t:'pass', d:'M366 940 L488 814' }, { t:'bad', d:'M326 936 Q 250 860 296 754' }],
+        xs:[[282,852]],
+        notes:[{ x:120, y:766, text:'Wide' }, { x:520, y:766, text:'Wide' }, { x:190, y:900, text:'Never up the middle' }],
+        play:[{ who:'ball', d:'M358 940 L192 812', dur:900, delay:600 }] },
+      { nav:'Your goals', title:'Your goals',
+        goals:[['Cut the angle','Ball, you, middle of the goal. Step out a few steps.'],
+               ['Low saves','Stay low, hands down early, dive sideways.'],
+               ['Safe hands','W for high shots, scoop low ones into your chest.'],
+               ['Distribute wide','Roll or throw it to the side. Never into the middle.']],
+        cue:'Last line, first pass.', zones:[{ rect:[236,890,208,108], label:'Your house', lx:340, ly:920 }] }
+    ]
+  }
+];
+
+/* ---------- engine ---------- */
+const $ = id => document.getElementById(id);
+const L = { zones:$('layer-zones'), arrows:$('layer-arrows'), players:$('layer-players'), notes:$('layer-notes'), sampler:$('sampler') };
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MK = { run:'m-us', drib:'m-us', pass:'m-ink', shot:'m-acc', opp:'m-them', bad:'m-them' };
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function setPos(node, p) { node.style.transform = `translate(${p[0]}px, ${p[1]}px)`; }
+
+const nodes = {};
+for (const id of OPP) {
+  const g = el('g', { class:'pl them off' }, L.players);
+  el('circle', { r:18 }, g);
+  el('line', { x1:-7, y1:-7, x2:7, y2:7 }, g); el('line', { x1:7, y1:-7, x2:-7, y2:7 }, g);
+  nodes[id] = g; setPos(g, [340, 120]);
+}
+for (const id in BASE) {
+  const g = el('g', { class:'pl us' }, L.players);
+  el('circle', { r:22 }, g);
+  const t = el('text', { y:6 }, g); t.textContent = id;
+  nodes[id] = g; setPos(g, BASE[id]);
+}
+const ball = el('g', { class:'pl ball off' }, L.players);
+el('circle', { r:9 }, ball);
+setPos(ball, [340, 500]);
+
+const sel = $('role');
+ROLES.forEach(r => { const o = document.createElement('option'); o.value = r.key; o.textContent = r.option; sel.appendChild(o); });
+
+let role = ROLES[0], cur = 0, raf = 0, timer = 0;
+
+function note(n, parent) {
+  const t = el('text', { x:n.x, y:n.y, class:'note' + (n.big ? ' big' : ''), 'text-anchor': n.anchor || 'middle' }, parent);
+  t.textContent = n.text;
+}
+function xmark(x, y, parent) {
+  el('line', { x1:x-12, y1:y-12, x2:x+12, y2:y+12, class:'xmark' }, parent);
+  el('line', { x1:x+12, y1:y-12, x2:x-12, y2:y+12, class:'xmark' }, parent);
+}
+function stopPlay() { cancelAnimationFrame(raf); clearTimeout(timer); L.sampler.textContent = ''; }
+
+function setRole(key, keepStep) {
+  role = ROLES.find(r => r.key === key) || ROLES[0];
+  sel.value = role.key;
+  $('role-name').textContent = role.name;
+  $('role-num').textContent = role.num;
+  $('role-tag').textContent = role.tag;
+  $('lg-role').textContent = role.name;
+  const list = $('steps'); list.textContent = '';
+  role.steps.forEach((s, i) => {
+    const li = document.createElement('li'); const b = document.createElement('button');
+    b.type = 'button'; b.textContent = s.nav; b.addEventListener('click', () => go(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  try { localStorage.setItem('pb-role', role.key); } catch (e) {}
+  try { if (location.hash.slice(1) !== role.key) history.replaceState(null, '', '#' + role.key); } catch (e) {}
+  go(keepStep || 0);
+}
+
+function go(i) {
+  stopPlay();
+  const steps = role.steps;
+  cur = Math.max(0, Math.min(steps.length - 1, i));
+  const s = steps[cur];
+  const hl = s.hl || role.hl;
+  for (const id in BASE) {
+    const n = nodes[id];
+    n.style.transition = '';
+    setPos(n, (s.pos && s.pos[id]) || BASE[id]);
+    n.classList.toggle('hl', hl.includes(id));
+    n.classList.toggle('dim', !!s.focus && !s.focus.includes(id));
+  }
+  for (const id of OPP) {
+    const n = nodes[id], p = s.opp && s.opp[id];
+    n.style.transition = '';
+    n.classList.toggle('off', !p);
+    if (p) setPos(n, p);
+  }
+  ball.style.transition = '';
+  ball.classList.toggle('off', !s.ball);
+  if (s.ball) setPos(ball, s.ball);
+
+  for (const k of ['zones','arrows','notes']) L[k].textContent = '';
+  const fresh = reduced ? '' : ' fresh';
+  (s.zones || []).forEach(z => {
+    el('rect', { x:z.rect[0], y:z.rect[1], width:z.rect[2], height:z.rect[3], rx:18, class:'zone' + (z.bad ? ' bad' : '') + fresh }, L.zones);
+    if (z.label) note({ x:z.lx, y:z.ly, text:z.label, big:true }, L.notes);
+  });
+  (s.lines || []).forEach(l => {
+    el('path', { d:l.d, class:'offline' + fresh }, L.zones);
+    if (l.label) note({ x:l.lx, y:l.ly, text:l.label, anchor:l.anchor }, L.notes);
+  });
+  (s.ghosts || []).forEach(g => el('circle', { cx:g[0], cy:g[1], r:22, class:'ghost' + fresh }, L.arrows));
+  (s.arrows || []).forEach(a => {
+    const attrs = { d:a.d, class:'ar ' + a.t + fresh };
+    if (MK[a.t]) attrs['marker-end'] = `url(#${MK[a.t]})`;
+    el('path', attrs, L.arrows);
+  });
+  (s.crosses || []).forEach(c => {
+    el('path', { d:c.line, class:'ar opp' + fresh, opacity:.55 }, L.arrows);
+    xmark(c.x, c.y, el('g', { class:fresh.trim() }, L.notes));
+  });
+  (s.xs || []).forEach(p => xmark(p[0], p[1], el('g', { class:fresh.trim() }, L.notes)));
+  (s.notes || []).forEach(n => note(n, L.notes));
+
+  $('count').textContent = `Step ${cur + 1} of ${steps.length}`;
+  $('title').textContent = s.title;
+  const body = $('body'); body.textContent = '';
+  if (s.goals) {
+    const ul = document.createElement('ul'); ul.className = 'goals';
+    s.goals.forEach(([h, d]) => {
+      const li = document.createElement('li'); const b = document.createElement('b'); const sp = document.createElement('span');
+      b.textContent = h; sp.textContent = d; li.append(b, sp); ul.appendChild(li);
+    });
+    body.appendChild(ul);
+  } else {
+    s.body.forEach(t => { const p = document.createElement('p'); p.textContent = t; body.appendChild(p); });
+  }
+  $('cue').textContent = s.cue;
+  $('prev').disabled = cur === 0;
+  $('next').disabled = cur === steps.length - 1;
+  $('replay').hidden = !s.play;
+  document.querySelectorAll('#steps button').forEach((b, j) => { if (j === cur) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current'); });
+  if (s.play && !reduced) timer = setTimeout(play, 750);
+}
+
+function ease(k) { return k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2) / 2; }
+
+function play() {
+  stopPlay();
+  const s = role.steps[cur];
+  if (!s.play) return;
+  const tracks = s.play.map(p => {
+    const path = el('path', { d:p.d }, L.sampler);
+    const node = p.who === 'ball' ? ball : nodes[p.who];
+    node.style.transition = 'none';
+    const pt = path.getPointAtLength(0); setPos(node, [pt.x, pt.y]);
+    return { ...p, path, node, len: path.getTotalLength() };
+  });
+  const start = performance.now();
+  const frame = now => {
+    let done = true;
+    for (const t of tracks) {
+      let k = (now - start - (t.delay || 0)) / t.dur;
+      if (k < 1) done = false;
+      k = Math.max(0, Math.min(1, k));
+      const pt = t.path.getPointAtLength(ease(k) * t.len);
+      setPos(t.node, [pt.x, pt.y]);
+    }
+    if (!done) raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+}
+
+sel.addEventListener('change', () => setRole(sel.value));
+$('prev').addEventListener('click', () => go(cur - 1));
+$('next').addEventListener('click', () => go(cur + 1));
+$('replay').addEventListener('click', () => { go(cur); clearTimeout(timer); setTimeout(play, 650); });
+document.addEventListener('keydown', e => {
+  if (e.target === sel) return;
+  if (e.key === 'ArrowRight') go(cur + 1);
+  if (e.key === 'ArrowLeft') go(cur - 1);
+});
+window.addEventListener('hashchange', () => { const k = location.hash.slice(1); if (k && k !== role.key) setRole(k); });
+
+let startKey = location.hash.slice(1);
+if (!ROLES.some(r => r.key === startKey)) { try { startKey = localStorage.getItem('pb-role') || ''; } catch (e) { startKey = ''; } }
+for (const id in nodes) nodes[id].style.transition = 'none';
+setRole(startKey);
+</script>
+
+</body></html>
