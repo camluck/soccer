@@ -337,8 +337,11 @@ function viewSetPiece(key, step) {
 function demoDeck(show) {
   return show.flatMap(entry => {
     if (typeof entry === 'string') {
-      const sc = SCENES[entry];
-      return sc ? sc.steps.map(s => ({ s, hl: s.hl || [], view: s.view || sc.view, label: s.nav })) : [];
+      const [id, only] = entry.split(':');
+      const sc = SCENES[id];
+      if (!sc) return [];
+      const steps = only != null ? [sc.steps[+only]].filter(Boolean) : sc.steps;
+      return steps.map(s => ({ s, hl: s.hl || [], view: s.view || sc.view, label: s.nav }));
     }
     const [key, nav, label] = entry;
     const r = ROLES.find(x => x.key === key);
@@ -378,6 +381,44 @@ function buildDemo(show, label, compact) {
   return { box, board, deck };
 }
 
+/* A titled list of concepts. Tap a row to open its explanation and animation in place. */
+function conceptGroup(name, items, openSlug) {
+  const g = { name, items };
+  const sec = make('section', 'plist-group'); sec.appendChild(make('h3', null, g.name));
+  const ul = make('ul', 'plist');
+  g.items.forEach((it, k) => {
+    const li = make('li');
+    const pid = `pp-${g.name}-${k}`.toLowerCase().replace(/[^a-z0-9-]+/g, '');
+    const row = make('button', 'prow'); row.type = 'button';
+    row.setAttribute('aria-expanded', 'false'); row.setAttribute('aria-controls', pid);
+    row.append(make('span', 'prow-title', it.title), make('span', 'prow-cue', it.cue), make('span', 'prow-chev', '›'));
+    const panel = make('div', 'ppanel'); panel.id = pid; panel.hidden = true;
+    let demo = null;
+    const ctl = {
+      close() {
+        if (demo) { demo.board.stop(); demo.box.remove(); demo = null; }
+        panel.hidden = true; panel.textContent = ''; row.setAttribute('aria-expanded', 'false');
+        if (openDemo === ctl) openDemo = null;
+      },
+      open() {
+        if (openDemo && openDemo !== ctl) openDemo.close();
+        panel.textContent = ''; panel.appendChild(make('p', null, it.body));
+        if (it.show && demoDeck(it.show).length) {
+          demo = buildDemo(it.show, it.title, false);
+          panel.appendChild(demo.box); demo.board.load(demo.deck, 0); applyOpp();
+        }
+        panel.hidden = false; row.setAttribute('aria-expanded', 'true'); openDemo = ctl;
+        requestAnimationFrame(() => row.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }));
+      }
+    };
+    row.addEventListener('click', () => (panel.hidden ? ctl.open() : ctl.close()));
+    if (openSlug && titleSlug(it.title) === openSlug) requestAnimationFrame(() => ctl.open());
+    li.append(row, panel); ul.appendChild(li);
+  });
+  sec.appendChild(ul);
+  return sec;
+}
+
 /* ---------- practice: one simple list. Tap a concept to open it right there. ---------- */
 const titleSlug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 function viewPractice(week, openSlug) {
@@ -396,40 +437,7 @@ function viewPractice(week, openSlug) {
     n.append(make('strong', null, w.note.title), make('span', null, w.note.body));
     wrap.appendChild(n);
   }
-  w.groups.forEach(g => {
-    const sec = make('section', 'plist-group'); sec.appendChild(make('h3', null, g.name));
-    const ul = make('ul', 'plist');
-    g.items.forEach((it, k) => {
-      const li = make('li');
-      const pid = `pp-${g.name}-${k}`.toLowerCase().replace(/[^a-z0-9-]+/g, '');
-      const row = make('button', 'prow'); row.type = 'button';
-      row.setAttribute('aria-expanded', 'false'); row.setAttribute('aria-controls', pid);
-      row.append(make('span', 'prow-title', it.title), make('span', 'prow-cue', it.cue), make('span', 'prow-chev', '›'));
-      const panel = make('div', 'ppanel'); panel.id = pid; panel.hidden = true;
-      let demo = null;
-      const ctl = {
-        close() {
-          if (demo) { demo.board.stop(); demo.box.remove(); demo = null; }
-          panel.hidden = true; panel.textContent = ''; row.setAttribute('aria-expanded', 'false');
-          if (openDemo === ctl) openDemo = null;
-        },
-        open() {
-          if (openDemo && openDemo !== ctl) openDemo.close();
-          panel.textContent = ''; panel.appendChild(make('p', null, it.body));
-          if (it.show && demoDeck(it.show).length) {
-            demo = buildDemo(it.show, it.title, false);
-            panel.appendChild(demo.box); demo.board.load(demo.deck, 0); applyOpp();
-          }
-          panel.hidden = false; row.setAttribute('aria-expanded', 'true'); openDemo = ctl;
-          requestAnimationFrame(() => row.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }));
-        }
-      };
-      row.addEventListener('click', () => (panel.hidden ? ctl.open() : ctl.close()));
-      if (openSlug && titleSlug(it.title) === openSlug) requestAnimationFrame(() => ctl.open());
-      li.append(row, panel); ul.appendChild(li);
-    });
-    sec.appendChild(ul); wrap.appendChild(sec);
-  });
+  w.groups.forEach(g => wrap.appendChild(conceptGroup(g.name, g.items, openSlug)));
 }
 
 /* ---------- match day: swipeable player cards with their own animation + quick finder ---------- */
@@ -437,11 +445,29 @@ const slug = p => p.name.toLowerCase().replace(/[^a-z0-9]+/g, '');
 let curMatch = MATCHES[0], PLAYERS = [], matchIdx = 0, deckScrollTimer = 0;
 const cardDemos = new Map();
 
+function renderMatchPlan(m) {
+  const box = $('match-plan'); box.textContent = '';
+  if (!m.opponent) { box.hidden = true; return; }
+  box.hidden = false;
+  const vs = make('div', 'vs');
+  const left = make('div');
+  left.append(make('small', null, m.home ? 'Home match' : 'Away match'), make('strong', null, 'vs ' + m.opponent.name));
+  const meta = make('div', 'vs-meta');
+  meta.append(make('span', null, m.when), make('span', null, m.where));
+  left.appendChild(meta);
+  const rec = make('div', 'vs-rec');
+  if (m.opponent.standing) rec.append(make('b', null, m.opponent.standing), make('span', null, m.opponent.record));
+  vs.append(left, rec);
+  box.appendChild(vs);
+  if (m.plan) box.appendChild(conceptGroup('Keys to the game', m.plan));
+}
+
 function buildDeck(m) {
   curMatch = m;
   cardDemos.forEach(d => d.board.stop()); cardDemos.clear();
   PLAYERS = m.groups.flatMap(g => g.players.map(p => ({ ...p, group: g.group })));
   $('team-goal').textContent = m.teamGoal;
+  renderMatchPlan(m);
   const track = $('track'); track.textContent = '';
   PLAYERS.forEach((p, i) => {
     const c = make('article', 'pcard'); c.id = 'p-' + slug(p);
@@ -550,7 +576,7 @@ function viewMatch(num, who) {
   const m = MATCHES.find(x => x.match === num) || MATCHES[0];
   if (m !== curMatch || !PLAYERS.length) { buildDeck(m); matchIdx = 0; }
   showSection('match');
-  header('Match day', 'Match goals', m.label, 'Swipe through the players, or find one by name.');
+  header('Match day', 'Match goals', m.label, m.opponent ? `vs ${m.opponent.name}. Know the game plan, then swipe to your goal.` : 'Swipe through the players, or find one by name.');
   const parts = [playerFinder()];
   if (MATCHES.length > 1) {
     const chips = make('div', 'chips');
@@ -599,7 +625,9 @@ function viewHome() {
       if (p.no) a.appendChild(make('span', 'n', p.no));
       a.appendChild(document.createTextNode(p.name)); names.appendChild(a);
     }));
-    md.append(make('div', 'kicker', 'Match day'), make('h2', null, `${m.label} goals`), make('p', null, 'Tap your name to see your goal for the match.'), names,
+    md.append(make('div', 'kicker', 'Match day'), make('h2', null, `${m.label} goals`));
+    if (m.opponent) md.appendChild(make('p', 'vs-line', `vs ${m.opponent.name} · ${m.when} · ${m.where}`));
+    md.append(make('p', null, 'Tap your name to see your goal for the match.'), names,
       link('btn small more', '#match', 'See all match goals →'));
     grid.append(wk, md);
 
