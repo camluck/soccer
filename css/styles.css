@@ -174,6 +174,37 @@ h2 { font: 800 38px/1 var(--font-display); margin: 2px 0 0; text-transform: uppe
 .hide-opp .them, .hide-opp .ar.opp { display: none; }
 .opp-toggle[aria-pressed="false"] { border-style: dashed; color: var(--muted); }
 
+/* ---------- home ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 32px; align-items: center; padding: 28px; margin-bottom: 28px; border-radius: 16px; background: var(--bar); color: var(--bar-ink); overflow: hidden; }
+.hero-mark { display: flex; align-items: center; gap: 14px; }
+.hero-mark svg { flex: none; }
+.hero h1 { font-size: clamp(64px, 11vw, 120px); line-height: .85; letter-spacing: .03em; }
+.hero .sub { font: 700 16px var(--font-display); text-transform: uppercase; letter-spacing: .14em; opacity: .75; margin-top: 10px; }
+.hero p { margin: 16px 0 0; max-width: 44ch; font-size: 17px; opacity: .9; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.hero-cta .btn { border-color: var(--bar-ink); color: var(--bar-ink); }
+.hero-cta .btn.primary { background: var(--bar-ink); color: var(--bar); border-color: var(--bar-ink); }
+.hero .mini { width: 100%; max-width: 300px; height: auto; justify-self: center; background: var(--board); border-radius: 10px; }
+
+.home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 28px; }
+.panelcard { display: grid; gap: 12px; align-content: start; padding: 20px; background: var(--board); border: 1px solid var(--rule); border-radius: 14px; min-width: 0; }
+.panelcard .kicker { font: 700 13px var(--font-display); text-transform: uppercase; letter-spacing: .12em; color: var(--us); }
+.panelcard h2 { font-size: 32px; margin: 0; }
+.panelcard > p { margin: 0; color: var(--muted); }
+.panelcard .more { justify-self: start; }
+.linkchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.linkchips a { text-decoration: none; font: 700 15px/1 var(--font-display); text-transform: uppercase; letter-spacing: .04em; padding: 9px 12px; border-radius: 999px; background: var(--bg); color: var(--ink); border: 1px solid var(--rule); }
+.linkchips a:hover { border-color: var(--us); color: var(--us); }
+.linkchips a .n { color: var(--us); margin-right: 6px; font-variant-numeric: tabular-nums; }
+
+.home-section h3 { font: 700 14px var(--font-display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 0 0 10px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.tile { display: grid; gap: 4px; padding: 14px; border-radius: 12px; background: var(--board); border: 1px solid var(--rule); text-decoration: none; color: var(--ink); min-width: 0; }
+.tile:hover { border-color: var(--us); }
+.tile b { font: 800 22px/1 var(--font-display); text-transform: uppercase; }
+.tile span { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--us); }
+.tile small { font-size: 13px; color: var(--muted); line-height: 1.35; }
+
 /* ---------- practice: one list, tap a row to open it ---------- */
 .callout { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 22px; border-radius: 10px; background: var(--board); border-left: 4px solid var(--us); }
 .callout strong { font: 800 20px/1.1 var(--font-display); text-transform: uppercase; }
@@ -271,6 +302,10 @@ h2 { font: 800 38px/1 var(--font-display); margin: 2px 0 0; text-transform: uppe
   h2 { font-size: 32px; }
   .controls { position: sticky; bottom: 0; background: var(--bg); padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--rule); margin-inline: -16px; padding-inline: 16px; }
   .cards { grid-template-columns: minmax(0, 1fr); }
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 22px 18px; gap: 20px; }
+  .hero .mini { max-width: 240px; }
+  .home-grid { grid-template-columns: minmax(0, 1fr); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .demo { grid-template-columns: minmax(0, 1fr); }
   .demo .mini { max-height: 60vh; width: auto; max-width: 100%; justify-self: center; }
   .deck { grid-template-columns: minmax(0, 1fr); margin-inline: -16px; }
