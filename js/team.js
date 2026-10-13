@@ -33,47 +33,62 @@ const MATCH_3 = [
 const MATCH_4 = [
   { group:'Attack', players:[
     { no:'17', name:'Lia', pos:['ST','LW'], goal:'Get in behind', today:'Stay on their last defender and make 3+ delayed runs for through balls. Shoot with either foot.',
+      practice: ['Delayed runs', 'Finishing in the box'],
       show: [['striker','Delayed run'], ['striker','The flash']] },
     { no:'33', name:'Cruz', pos:['LW','ST'], goal:'Show, then go', today:'Check toward the ball, then spin and sprint in behind. When the ball is on the right, crash the back post.',
+      practice: ['Wings: show square, then go'],
       show: [['wings','Show, then go'], ['wings','Back post']] },
     { no:'', name:'Avery', pos:['RW','RM','LW'], goal:'Quick throw-ins', today:'Ball out on our side? Sprint to it and throw it in fast. When you get it, face their goal.',
+      practice: ['Quick restarts'],
       show: ['restarts:0', 'face-goal:0'] },
-    { no:'', name:'Joanna', pos:['RW','LW'], goal:'Get involved', today:'Move toward the ball and call for it. Aim for 5+ touches. Stuck? Big kick up the line.',
-      show: ['get-involved', 'face-goal:1'] }
+    { no:'', name:'Joanna', pos:['RW','LW'], goal:'Show for the ball', today:'Check toward the ball to show for a pass, then spin and run in behind. Call for it and aim for 5+ touches.',
+      practice: ['Wings: show square, then go'],
+      show: ['get-involved', ['wings','Show, then go']] }
   ]},
   { group:'Midfield', players:[
     { no:'24', name:'Kenya', pos:['CAM','CM'], goal:'Break their line', today:'Find the pocket, turn, and slide 2+ through balls into space for Lia and the wings.',
+      practice: ['Through balls that break the line'],
       show: [['cam','Find the pocket'], ['cam','Feed the striker']] },
     { no:'', name:'Sofia', pos:['CAM','ST'], goal:'Shoot from the top', today:'Arrive late at the top of the box and shoot. On corners, drop to the arc for anything cleared.',
+      practice: ['Finishing in the box', 'Corner kicks'],
       show: [['cam','Arrive late'], ['corner1-right','CAM · Top of the arc','Corner: top of the arc']] },
     { no:'45', name:'Aadhya', pos:['LM','RM','ST'], goal:'Come home, then go', today:'When we lose it, sprint home on the inside. When we win it, dribble and release the through ball.',
+      practice: ['Recover when we get beat', 'Through balls that break the line'],
       show: [['wide-mids','Track back'], ['wide-mids','Dribble, release']] },
     { no:'6', name:'Natalie', pos:['LM','LW'], goal:'Track back inside', today:'Every time we lose it, sprint back on the inside of your attacker. Get goal-side before you tackle.',
+      practice: ['Recover when we get beat'],
       show: [['wide-mids','Track back'], ['wide-mids','Share the side']] },
-    { no:'26', name:'Sydney', pos:['RM','LM'], goal:'Win it, find a pass', today:'Shield it, look up, and find a teammate 3+ times. On corners, be the first short option.',
+    { no:'26', name:'Sydney', pos:['RM','LM'], goal:'Win it, slip it through', today:'Shield it, look up, and slide a through ball to the wing or Lia. On corners, be the first short option.',
+      practice: ['Through balls that break the line', 'Corner kicks'],
       show: [['wide-mids','Win it, pass it'], ['corner1-right','RM · Short 1','Corner: short option']] },
-    { no:'', name:'Jensyne', pos:['RM','RW'], goal:'Cross it in', today:'Get to the end line and cross it in 2+ times. Sprint home inside every time we lose it.',
+    { no:'', name:'Jensyne', pos:['RM','RW'], goal:'Cross it in', today:'Get to the end line and cross it in 2+ times for our finishers. Sprint home inside every time we lose it.',
+      practice: ['Recover when we get beat', 'Finishing in the box'],
       show: [['wide-mids','Cross it in'], ['wide-mids','Track back']] },
     { no:'', name:'Frida', pos:['CDM','CB'], goal:'Guard the middle', today:'Stay central in front of the backs. Step in when their player takes a big touch.',
+      practice: ['Step in on the dribbler'],
       show: [['cdm','Slide, don’t drift'], ['cdm','Step in']] },
     { no:'2', name:'Josie', pos:['CDM','CM'], goal:'Win second balls', today:'On corners and clearances, step up between the circle and the box and win the loose ball. Two touches max.',
+      practice: ['Corner kicks'],
       show: [['corner1-right','CDM · Support','Corner: support'], ['cdm','Win it, move it']] }
   ]},
   { group:'Defense', players:[
     { no:'5', name:'Dahlia', pos:['LB','CB','RB'], goal:'Force it wide', today:'Close the middle and show your attacker the sideline. Call “Man on,” “Time,” and “Mine” every play.',
+      practice: ['Force them wide'],
       show: [['backs','Force it wide'], ['backs','Be loud']] },
-    { no:'', name:'Ximena', pos:['LB','CDM'], goal:'Space or safe', today:'No dribbling in our half. Space? Pass it. Pressure? Clear it up the sideline. Force them wide.',
-      show: [['backs','Space or safe'], ['backs','Force it wide']] }
+    { no:'', name:'Ximena', pos:['LB','CDM'], goal:'Step in, then play it', today:'Stay goal-side and patient. When your attacker takes a big touch, step in and win it. Then space? Pass it. Pressure? Clear it.',
+      practice: ['Step in on the dribbler', 'Force them wide'],
+      show: [['backs','Stay goal-side'], ['cdm','Step in'], ['backs','Space or safe']] }
   ]},
   { group:'Goalkeeper', players:[
-    { no:'', name:'Raven', pos:['GK','RB'], goal:'Low and ready, then wide', today:'Low ready stance on every shot. After a save or on goal kicks, get it to LM or RM fast.',
-      show: [['gk','Low saves'], ['gk','Distribute wide'], 'restarts:1'] }
+    { no:'', name:'Raven', pos:['GK','RB'], goal:'Fast goal kicks', today:'Ball out over our end line? Grab it, set it on the six fast, and find LM or RM before they set up. Low ready stance on every shot.',
+      practice: ['Quick restarts'],
+      show: ['restarts:1', ['gk','Distribute wide'], ['gk','Low saves']] }
   ]}
 ];
 
 /* Newest match first: the Match day tab and the home page open on it. */
 const MATCHES = [
-  { match: 4, label: 'Match 4', teamGoal: 'Stay compact. Strike in behind.',
+  { match: 4, label: 'Match 4', week: 4, teamGoal: 'Stay compact. Strike in behind.',
     when: 'Sat, Oct 17 · 1:00 PM', where: 'Riverwalk #2', home: true,
     opponent: { name: 'NASA Fire Breathing Rubber Duckies', standing: '1st in Bracket A', record: '4 W · 1 L · 0 D · 8 goals for, 5 against' },
     plan: [

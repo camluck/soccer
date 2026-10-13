@@ -478,7 +478,14 @@ function buildDeck(m) {
     who.append(make('span', 'no', p.no || '–'), info);
     const today = make('div', 'today'); today.append(make('small', null, 'This match'), make('span', null, p.today));
     const slot = make('div', 'pdemo');
-    c.append(make('div', 'grp', p.group), who, make('div', 'goal', p.goal), today, slot);
+    const parts = [make('div', 'grp', p.group), who, make('div', 'goal', p.goal), today];
+    if (p.practice && p.practice.length) {
+      const from = make('div', 'from'); from.appendChild(make('small', null, m.week ? `From week ${m.week} practice` : 'From practice'));
+      const chips = make('div', 'linkchips');
+      p.practice.forEach(title => { const a = make('a', null, title); a.href = `#${m.week ? 'week' + m.week : 'practice'}.${titleSlug(title)}`; chips.appendChild(a); });
+      from.appendChild(chips); parts.push(from);
+    }
+    c.append(...parts, slot);
     c.addEventListener('click', e => { if (i !== matchIdx && !e.target.closest('button')) { e.preventDefault(); showPlayer(i); } });
     track.appendChild(c);
   });
