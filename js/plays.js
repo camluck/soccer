@@ -620,6 +620,29 @@ ROLES.push(buildCorner('R', 1), buildCorner('L', 1), buildCorner('R', 2), buildC
 /* ---------- practice scenes: animations that belong to a practice concept, not one position ---------- */
 const ATTACK_HALF = '-34 -40 748 590';
 const SCENES = {
+  'through-options': { steps: [
+    { nav:'To the corner', title:'Down the line toward the corner flag',
+      body:['Our wing stays wide by the sideline, which stretches their defense. CAM looks up and slides the ball into the space toward the corner flag.',
+            'The wing sprints onto it. Pass to where she\u2019s going, not to her feet.'],
+      cue:'Stay wide, run onto it.', focus:['CAM','LW','RW'], hl:['CAM','LW'],
+      pos:{ LW:[70,120], RW:[618,300], CAM:[340,470] },
+      opp:{ o1:[132,214], o2:[262,198], o3:[418,198], o4:[560,214], o5:[250,400], o6:[430,400] }, ball:[82,110],
+      arrows:[{ t:'pass', d:'M350 456 Q 210 300 90 122' }, { t:'run', d:'M58 300 L66 140' }, { t:'link', d:'M618 300 L640 150' }],
+      notes:[{ x:30, y:340, text:'Stay wide', anchor:'start' }, { x:110, y:84, text:'Into the corner', anchor:'start' }, { x:650, y:340, text:'Same on this side', anchor:'end' }],
+      play:[{ who:'LW', d:'M58 300 L58 300 L70 120', dur:1500, delay:600 }, { who:'ball', d:'M352 462 Q 210 300 82 110', dur:1100, delay:800 }] },
+    { nav:'Over the top', title:'Middle open? Over the top to Lia',
+      body:['If there\u2019s nobody in the middle, play it over the top of their back line into the space in front of Lia.',
+            'Lia waits on their last defender and runs forward onto it. Never backward.'],
+      cue:'Middle open? Over the top.', focus:['CAM','ST'], hl:['CAM','ST'],
+      pos:{ ST:[364,110], CAM:[340,470] },
+      opp:{ o1:[110,212], o2:[262,198], o3:[418,198], o4:[570,212], o5:[170,420], o6:[510,420] }, ball:[366,104],
+      lines:[{ d:'M0 198 L680 198' }],
+      arrows:[{ t:'pass', d:'M346 456 Q 362 270 364 122' }, { t:'run', d:'M340 216 Q 380 232 366 124' }],
+      zones:[{ rect:[220,300,240,150], label:'Middle open', lx:340, ly:336 }],
+      notes:[{ x:392, y:110, text:'Into space for Lia', anchor:'start' }],
+      play:[{ who:'ST', d:'M340 216 Q 382 236 364 110', dur:1400, delay:700 }, { who:'ball', d:'M346 462 Q 362 270 366 104', dur:1100, delay:900 }] }
+  ]},
+
   'face-goal': { steps: [
     { nav:'Face their goal', title:'Turn toward their goal',
       body:['When the ball comes to you, turn and face their goal, then go forward.', 'Running back toward our goal brings their attackers with you.'],
