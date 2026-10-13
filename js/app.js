@@ -105,8 +105,8 @@ function createBoard(svg, onStep, opts = {}) {
   function go(i, autoplay = true) {
     stop();
     cur = Math.max(0, Math.min(deck.length - 1, i));
-    const { s, hl, view } = deck[cur];
-    svg.setAttribute('viewBox', (opts.zoom && autoView(s, hl)) || view || FULL_VIEW);
+    const { s, hl, view, fixed } = deck[cur];
+    svg.setAttribute('viewBox', (opts.zoom && !fixed && autoView(s, hl)) || view || FULL_VIEW);
     for (const p in BASE) {
       const n = nodes[p];
       n.style.transition = '';
@@ -343,10 +343,12 @@ function demoDeck(show) {
       const steps = only != null ? [sc.steps[+only]].filter(Boolean) : sc.steps;
       return steps.map(s => ({ s, hl: s.hl || [], view: s.view || sc.view, label: s.nav }));
     }
-    const [key, nav, label] = entry;
+    const [key, nav, label, opt] = entry;
     const r = ROLES.find(x => x.key === key);
     const s = r && r.steps.find(x => x.nav === nav);
-    return s ? [{ s, hl: s.hl || r.hl, view: r.view, label: label || s.nav }] : [];
+    /* opt { view: 'half' } shows the whole attacking half instead of zooming in */
+    const half = opt && opt.view === 'half';
+    return s ? [{ s, hl: s.hl || r.hl, view: half ? ATTACK_HALF : r.view, fixed: half, label: label || s.nav }] : [];
   });
 }
 

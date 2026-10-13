@@ -4,7 +4,7 @@ const POS_ROLE = { ST:'striker', LW:'wings', RW:'wings', CAM:'cam', CM:'cam', LM
 /* Match 3 goals. For a new match, copy this list, change the goals, and add it to the top of MATCHES below. */
 const MATCH_3 = [
   { group:'Attack', players:[
-    { no:'17', name:'Lia', pos:['ST','LW'], goal:'Stay high, time your runs', today:'Stay level with the last defender all game. Make 3 delayed runs and take 1 weak-foot shot.' , show: [['striker','Stay high'], ['striker','Delayed run']] },
+    { no:'17', name:'Lia', pos:['ST','LW'], goal:'Stay high, time your runs', today:'Stay level with the last defender all game. Make 3 delayed runs and take 1 weak-foot shot.' , show: [['striker','Stay high'], ['striker','Delayed run','Delayed run',{ view:'half' }]] },
     { no:'33', name:'Cruz', pos:['LW','ST'], goal:'Take her on', today:'Go at your defender 3+ times. When the ball is on the right, crash the back post.' , show: [['wings','Win the 1v1'], ['wings','Back post']] },
     { no:'', name:'Avery', pos:['RW','RM','LW'], goal:'Face their goal', today:'Every time you get the ball, turn toward their goal. Stuck? Big kick up the line.' , show: ['face-goal'] },
     { no:'', name:'Joanna', pos:['RW','LW'], goal:'Get involved', today:'Know your spot, move toward the ball, and ask for it. Aim for 5+ touches.' , show: ['get-involved', ['wings','Your spot','Your spot']] }
@@ -34,7 +34,7 @@ const MATCH_4 = [
   { group:'Attack', players:[
     { no:'17', name:'Lia', pos:['ST','LW'], goal:'Finish in the box', today:'Always run forward onto the ball, never backward. Get in the box, take one touch to set it, then shoot.',
       practice: ['Finishing in the box', 'Delayed runs'],
-      show: [['striker','Control to shot'], ['striker','Don\u2019t drop deep'], ['striker','Delayed run']] },
+      show: [['striker','Control to shot'], ['striker','Don\u2019t drop deep'], ['striker','Delayed run','Delayed run',{ view:'half' }]] },
     { no:'33', name:'Cruz', pos:['LW','ST'], goal:'Stay wide, run onto it', today:'Stay wide by the sideline so their defense stretches. When the CAM looks up, sprint in behind onto the ball toward the corner flag.',
       practice: ['Wings: show square, then go', 'Through balls that break the line'],
       show: ['through-options:0', ['wings','Stay wide'], ['wings','Back post']] },
