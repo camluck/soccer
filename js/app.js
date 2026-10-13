@@ -288,6 +288,9 @@ function chooser(...parts) { const c = $('chooser'); c.textContent = ''; c.hidde
 /* ---------- views ---------- */
 let openDemo = null;
 function showSection(view) {
+  $('v-home').hidden = view !== 'home';
+  $('pagehead').hidden = view === 'home';
+  if (view === 'home') chooser();
   $('v-practice').hidden = view !== 'practice';
   $('v-match').hidden = view !== 'match';
   $('v-board').hidden = !(view === 'play' || view === 'set');
@@ -376,7 +379,8 @@ function buildDemo(show, label, compact) {
 }
 
 /* ---------- practice: one simple list. Tap a concept to open it right there. ---------- */
-function viewPractice(week) {
+const titleSlug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function viewPractice(week, openSlug) {
   const w = PRACTICE.find(x => x.week === week) || PRACTICE[0];
   const current = w === PRACTICE[0];
   showSection('practice');
@@ -421,6 +425,7 @@ function viewPractice(week) {
         }
       };
       row.addEventListener('click', () => (panel.hidden ? ctl.open() : ctl.close()));
+      if (openSlug && titleSlug(it.title) === openSlug) requestAnimationFrame(() => ctl.open());
       li.append(row, panel); ul.appendChild(li);
     });
     sec.appendChild(ul); wrap.appendChild(sec);
@@ -557,6 +562,67 @@ function viewMatch(num, who) {
   requestAnimationFrame(() => showPlayer(i >= 0 ? i : matchIdx, true));
 }
 
+
+/* ---------- home ---------- */
+let homeBoard = null;
+function viewHome() {
+  showSection('home');
+  const root = $('v-home');
+  if (!root.childElementCount) {
+    const w = PRACTICE[0], m = MATCHES[0];
+    const link = (cls, href, text) => { const a = make('a', cls, text); a.href = href; return a; };
+
+    const hero = make('section', 'hero');
+    const left = make('div');
+    const mark = make('div', 'hero-mark');
+    mark.innerHTML = `<svg width="64" height="64" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#FFFFFF"/><path d="M17 6.5 L19.6 13.6 L27 14.1 L21.2 18.7 L23.1 26 L17 21.9 L10.9 26 L12.8 18.7 L7 14.1 L14.4 13.6 Z" fill="var(--us)"/></svg>`;
+    mark.appendChild(make('h1', null, 'Magic'));
+    const cta = make('div', 'hero-cta');
+    cta.append(link('btn primary', '#practice', `${w.label} practice →`), link('btn', '#match', `${m.label} goals →`));
+    left.append(mark, make('div', 'sub', '3-4-3 Diamond · Blue & White'),
+      make('p', null, 'Our playbook: what we’re working on this week, where everyone plays, our corner plays, and each player’s goal for the next match.'), cta);
+    const svg = el('svg', { class:'mini', role:'img', 'aria-label':'Our 3-4-3 diamond formation' });
+    hero.append(left, svg);
+
+    const grid = make('div', 'home-grid');
+    const wk = make('section', 'panelcard');
+    const concepts = make('div', 'linkchips');
+    w.groups.forEach(g => g.items.forEach(it => concepts.appendChild(link('', '#practice.' + titleSlug(it.title), it.title))));
+    wk.append(make('div', 'kicker', 'This week'), make('h2', null, w.label), make('p', null, w.headline));
+    if (w.note) wk.appendChild(make('p', null, w.note.title));
+    wk.append(concepts, link('btn small more', '#practice', 'Open practice plan →'));
+
+    const md = make('section', 'panelcard');
+    const names = make('div', 'linkchips');
+    m.groups.forEach(g => g.players.forEach(p => {
+      const a = link('', `#match${m.match}.${slug(p)}`, '');
+      if (p.no) a.appendChild(make('span', 'n', p.no));
+      a.appendChild(document.createTextNode(p.name)); names.appendChild(a);
+    }));
+    md.append(make('div', 'kicker', 'Match day'), make('h2', null, `${m.label} goals`), make('p', null, 'Tap your name to see your goal for the match.'), names,
+      link('btn small more', '#match', 'See all match goals →'));
+    grid.append(wk, md);
+
+    const pos = make('section', 'home-section'); pos.appendChild(make('h3', null, 'Positions'));
+    const pt = make('div', 'tiles');
+    POSITIONS.forEach(r => { const a = link('tile', '#' + r.key, ''); a.append(make('span', null, r.num), make('b', null, r.name), make('small', null, r.tag.split('. ')[0].replace(/\.$/, '') + '.')); pt.appendChild(a); });
+    pos.appendChild(pt);
+
+    const sp = make('section', 'home-section'); sp.appendChild(make('h3', null, 'Set pieces'));
+    const st = make('div', 'tiles');
+    [['corner1-right', 'Corner 1', 'Taker calls “1!”. Two short options and loop runs to both posts.'],
+     ['corner2-right', 'Corner 2', 'Taker calls “2!”. Same lineup, the short player goes front post.']].forEach(([k, n, d]) => {
+      const a = link('tile', '#' + k, ''); a.append(make('span', null, 'Corner kick'), make('b', null, n), make('small', null, d)); st.appendChild(a);
+    });
+    sp.appendChild(st);
+
+    root.append(hero, grid, pos, sp);
+    homeBoard = createBoard(svg);
+    homeBoard.load(demoDeck(['formation']).slice(0, 1), 0);
+  }
+  homeBoard.go(0, false);
+}
+
 /* ---------- router ---------- */
 let lastHash = null;
 function replaceHash(h) {
@@ -573,14 +639,15 @@ function route() {
   if (('#' + h) === lastHash && (onBoard || (onMatch && /^match/.test(key)))) return; // our own replaceState echo
   const step = Math.max(0, (parseInt(sub, 10) || 1) - 1);
   window.scrollTo(0, 0);
-  if (h === '' || h === 'practice') return viewPractice();
-  const wk = h.match(/^week(\d+)$/); if (wk) return viewPractice(+wk[1]);
+  if (h === '' || h === 'home') return viewHome();
+  if (key === 'practice') return viewPractice(undefined, sub);
+  const wk = key.match(/^week(\d+)$/); if (wk) return viewPractice(+wk[1], sub);
   const mt = key.match(/^match(\d*)$/); if (mt) return viewMatch(mt[1] ? +mt[1] : MATCHES[0].match, sub);
   if (h === 'set') return viewSetPiece(lastSet);
   if (h === 'playbook') return viewPosition(lastPos);
   if (isSet(key)) return viewSetPiece(key, step);
   if (isPos(key)) return viewPosition(key, step);
-  viewPractice();
+  viewHome();
 }
 window.addEventListener('hashchange', route);
 route();
