@@ -482,7 +482,7 @@ function buildCorner(side, n) {
   const T = sw('RW'), S1 = sw('RM'), S2 = 'ST', TR = sw('LM'), BP = sw('LW');
   const near = R ? 'right' : 'left';
   const sideName = R ? 'Right' : 'Left';
-  const START = P({ RW:[686,-12], RM:[552,92], ST:[612,238], CAM:[340,107], LW:[392,166], LM:[288,166], CDM:[340,440], LB:[190,474], CB:[340,486], RB:[490,474] });
+  const START = P({ RW:[686,-12], RM:[552,92], ST:[466,166], CAM:[340,107], LW:[392,166], LM:[288,166], CDM:[340,440], LB:[190,474], CB:[340,486], RB:[490,474] });
   const OPPS = O({ o1:[318,30], o2:[370,14], o3:[236,54], o4:[470,60], o5:[240,140], o6:[298,118], o7:[510,120] });
   const BALL = [mx(672), 6];
   const CDM_RUN = 'M340 440 L300 292';
@@ -502,16 +502,16 @@ function buildCorner(side, n) {
               `If they’re covered, deliver it to the front post, where ${TR} is arriving.`],
         sum:'Call “1!”. Play it short if it’s open. If not, deliver it to the front post.',
         arrows:[A('pass','M672 6 L616 44'), A('pass','M668 14 L564 170'), A('pass',cross)],
-        notes:[N(664,-18,`Calls “${n}!”`,'end')], ballPlay:[M('ball',cross,900,500)] },
+        notes:[N(708,40,`Calls “${n}!”`,'end')], ballPlay:[M('ball',cross,900,500)] },
       { id:'RM', nav:`${S1} · Short 1`, title:'Short option 1', cue:'Check to the ball.', path:'M552 92 L612 46', dur:800, delay:200,
         body:['Start at the edge of the box. As the taker gets ready, check down toward the corner for a short pass.',
               'If a defender follows you out, that’s one less defender in the box.'],
         sum:'Start at the edge of the box. Check down to the corner.',
         ballPlay:[M('ball','M672 6 L616 44',600,1150), M('o7','M510 120 L572 76',900,500)] },
-      { id:'ST', nav:`${S2} · Short 2`, title:'Short option 2', cue:'Second option, check in.', path:'M612 238 L558 172', dur:800, delay:200,
-        body:[`Start outside the ${near} corner of the 18. Check in to the corner of the box as the second short option.`,
+      { id:'ST', nav:`${S2} · Short 2`, title:'Short option 2', cue:'Second option, check in.', path:'M466 166 Q 520 190 558 172', dur:800, delay:200,
+        body:[`Start on the top of the 18, between ${BP} and the edge of the box. Check out to the corner of the box as the second short option.`,
               'If the first short pass goes in, be ready to get it back.'],
-        sum:`Start outside the ${near} side of the 18. Check to the corner of the box.`,
+        sum:`Start on the top of the 18 between ${BP} and the edge of the box. Check to the corner of the box.`,
         ballPlay:[M('ball','M668 14 L564 170',700,1100)] },
       { id:'LM', nav:`${TR} · Front post`, title:`${TR}: loop to the front post`, cue:'Loop, then front post.',
         path:'M288 166 Q 214 196 236 120 Q 262 60 392 54', dur:1500, delay:300,
@@ -538,14 +538,14 @@ function buildCorner(side, n) {
     tag = 'Same lineup as Corner 1, different runs. The close short player goes front post and the triangle rotates.';
     fullBody = [`Same lineup as Corner 1, so they can’t tell which play is coming. ${T} calls out “2!” to set it. ${S1} runs to the front post, ${S2} checks at the flag, and CAM gets to the top of the six.`,
                 `${TR} goes back post, and ${BP} slides across into ${TR}’s spot for anything cleared out. CDM steps up behind the play.`];
-    extraPlay = [M('o7','M510 120 L600 160',900,500)];
+    extraPlay = [M('o7','M510 120 L548 116',900,500)];
     movers = [
       { id:'RW', nav:`${T} · Taker`, title:'The taker', cue:'Front post, top of the six, or short.',
         body:[`Call out “2!” loud before you kick it, so everyone knows which play is on. Then pick from three options: the front post for ${S1}, the top of the six for CAM, or short to ${S2} at the flag.`,
               'Pick the one with the most space.'],
         sum:`Call “2!”. Front post to ${S1}, top of the six to CAM, or short to ${S2}.`,
-        arrows:[A('pass',cross), A('pass','M670 12 Q 560 150 424 72'), A('pass','M676 14 L652 124')],
-        notes:[N(664,-18,`Calls “${n}!”`,'end')], ballPlay:[M('ball',cross,900,500)] },
+        arrows:[A('pass',cross), A('pass','M670 12 Q 560 150 424 72'), A('pass','M670 10 L580 88')],
+        notes:[N(708,40,`Calls “${n}!”`,'end')], ballPlay:[M('ball',cross,900,500)] },
       { id:'RM', nav:`${S1} · Front post`, title:`${S1}: run to the front post`, cue:'Short player goes front post.',
         path:'M552 92 Q 470 74 404 50', dur:1200, delay:200,
         body:['Start at the edge of the box near the flag, just like Corner 1.',
@@ -553,11 +553,11 @@ function buildCorner(side, n) {
         sum:'Start at the edge of the box near the flag. Run to the front post.',
         notes:[N(420,-18,'Front post','start')], ballPlay:[M('ball',cross,900,1100)] },
       { id:'ST', nav:`${S2} · Short`, title:`${S2}: check at the flag`, cue:'Check straight at the flag.',
-        path:'M612 238 L646 130', dur:900, delay:200,
-        body:['Start at the top corner of the 18. Check straight at the flag.',
+        path:'M466 166 L566 96', dur:1000, delay:500,
+        body:[`Start on the top of the 18, between ${BP} and the edge of the box. When ${S1} leaves for the front post, check straight at the flag.`,
               'You’re the short option now, and you pull a defender out with you.'],
-        sum:'Start at the top corner of the 18. Check straight at the flag.',
-        ballPlay:[M('ball','M676 14 L650 120',600,1100), M('o7','M510 120 L600 160',900,500)] },
+        sum:`Start on the top of the 18 between ${BP} and the edge of the box. Check straight at the flag.`,
+        ballPlay:[M('ball','M670 10 L576 90',600,1500), M('o7','M510 120 L548 116',900,700)] },
       { id:'CAM', nav:'CAM · Top of the six', title:'CAM: top of the six', cue:'Spot to the six.',
         path:'M340 107 Q 392 98 420 66', dur:900, delay:300,
         body:['Start on the penalty spot. When the ball is kicked, run to the near-side top of the six.',
@@ -592,7 +592,7 @@ function buildCorner(side, n) {
   const ALL = movers.map(m => sw(m.id));
 
   const full = { ...base, nav:'Full play', title:'The full play', body: fullBody, cue:'Everyone has a job.',
-    arrows: [...runArrows, A('pass', cross)], notes: [...postNotes, backsNote, N(664,-18,`Calls “${n}!”`,'end')],
+    arrows: [...runArrows, A('pass', cross)], notes: [...postNotes, backsNote, N(708,40,`Calls “${n}!”`,'end')],
     play: [...movers.filter(m => m.path).map(m => M(m.id, m.path, m.dur, m.delay)), ...extraPlay, M('ball', cross, 900, 1200)] };
 
   const posSteps = movers.map(m => {
@@ -698,12 +698,12 @@ const SCENES = {
       body:['The ball goes out over their end line off one of their players. That’s our corner.',
             'The taker runs to the flag and calls out “1!” or “2!”. Everyone else sprints to their spot for that play and sets up before they get organized.'],
       cue:'Corner? Get to your spot.', hl:['RW','RM','ST','LM','LW','CAM'],
-      pos:{ RW:[686,-12], RM:[552,92], ST:[612,238], LM:[288,166], LW:[392,166], CAM:[340,107], CDM:[340,440], LB:[190,474], CB:[340,486], RB:[490,474] },
+      pos:{ RW:[686,-12], RM:[552,92], ST:[466,166], LM:[288,166], LW:[392,166], CAM:[340,107], CDM:[340,440], LB:[190,474], CB:[340,486], RB:[490,474] },
       opp:{ o1:[318,30], o2:[370,14], o3:[236,54], o4:[470,60], o5:[240,140], o6:[298,118], o7:[510,120] }, ball:[672,6],
       notes:[{ x:664, y:-18, text:'Taker to the flag', anchor:'end' }, { x:340, y:544, text:'Everyone to your corner spot', big:true }],
       play:[{ who:'ball', d:'M530 126 L640 -16', dur:500, delay:100 }, { who:'ball', d:'M640 -16 L672 6', dur:500, delay:1800 },
             { who:'RW', d:'M570 300 L686 -12', dur:1500, delay:400 }, { who:'RM', d:'M560 560 L552 92', dur:1800, delay:400 },
-            { who:'ST', d:'M340 250 L612 238', dur:1600, delay:400 }, { who:'LM', d:'M120 560 L288 166', dur:1900, delay:400 },
+            { who:'ST', d:'M340 250 L466 166', dur:1600, delay:400 }, { who:'LM', d:'M120 560 L288 166', dur:1900, delay:400 },
             { who:'LW', d:'M110 300 L392 166', dur:1700, delay:400 }, { who:'CAM', d:'M340 470 L340 107', dur:1700, delay:400 },
             { who:'CDM', d:'M340 690 L340 440', dur:1500, delay:400 }, { who:'LB', d:'M170 800 L190 474', dur:1700, delay:400 },
             { who:'CB', d:'M340 825 L340 486', dur:1700, delay:400 }, { who:'RB', d:'M510 800 L490 474', dur:1700, delay:400 }] }
